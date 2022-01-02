@@ -10,9 +10,6 @@ import Foundation
 import NonEmpty
 import Parsing
 
-typealias ItemType = String
-typealias Namespace = String
-
 /// Checks if the provided `Character` is a legal identifier value, according to Lua:
 ///
 /// "Identifiers in Lua can be any string of letters, digits, and underscores, not beginning with a digit.
@@ -28,18 +25,6 @@ func isIdentifier(_ char: Character) -> Bool {
 let optionalSpace = Prefix(minLength: 0, maxLength: 1, while: { $0 == " " })
 let optionalSpaces = Prefix(minLength: 0, while: { $0 == " " })
 let oneOrMoreSpaces = Prefix(minLength: 1, while: { $0 == " " })
-
-// Parsers for removing all the leading docstrings comments
-let objcComment = "///"
-let luaComment = "---"
-let skipComments = Skip(objcComment)
-    .orElse(Skip(luaComment))
-    // Strip off the single space that may exist after the comment strings
-    .skip(optionalSpace)
-
-// Parsers for skipping lines that are just a comment string followed by zero or more spaces
-let skipBlankLine = skipComments
-    .skip(optionalSpaces)
 
 // Parses a doc-prefixed blank line, terminating with a newline character.
 let blankLine = Skip {
