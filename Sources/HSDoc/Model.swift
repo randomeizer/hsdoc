@@ -184,5 +184,51 @@ struct FunctionDoc: Equatable {
         self.returns = returns
         self.notes = notes
     }
-    
 }
+
+/// Defines the signature for a function.
+struct MethodSignature : Equatable {
+    let name: ItemNameSignature
+    let parameters: [ParameterSignature]
+    let returns: [ReturnSignature]
+    
+    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature] = []) {
+        self.name = name
+        self.parameters = parameters
+        self.returns = returns
+    }
+}
+
+extension MethodSignature: CustomStringConvertible {
+    var description: String {
+        let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
+        if returns.isEmpty {
+            return main
+        }
+        return "\(main) -> \(returns.map { String(describing: $0) } .joined(separator: ", "))"
+    }
+}
+
+/// Defines the documentation for a function.
+struct MethodDoc: Equatable {
+    var signature: MethodSignature
+    var description: [DescriptionDoc]
+    var parameters: [ParameterDoc]
+    var returns: [ReturnDoc]
+    var notes: [NoteDoc]
+    
+    init(
+        signature: MethodSignature,
+        description: [DescriptionDoc],
+        parameters: [ParameterDoc],
+        returns: [ReturnDoc],
+        notes: [NoteDoc] = []
+    ) {
+        self.signature = signature
+        self.description = description
+        self.parameters = parameters
+        self.returns = returns
+        self.notes = notes
+    }
+}
+

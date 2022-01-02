@@ -352,6 +352,87 @@ class ParserSpec: QuickSpec {
                     leaving: ""
                 )
             }
+            
+            context("MethodSignature") {
+                let parser = MethodSignature.parser()
+                
+                itParses("function with params and returns", with: parser, from: "foo:bar(a, b) -> table, number",
+                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a"), .init(name: "b")], returns: ["table", "number"]), leaving: "")
+                
+                itParses("function with optional param", with: parser, from: "foo:bar([a])",
+                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a", isOptional: true)]), leaving: "")
+                
+                it("is described correctly with return values") {
+                    let value = MethodSignature(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a"), .init(name: "b", isOptional: true)], returns: ["table", "number"])
+                    
+                    expect(value.description).to(equal("foo:bar(a, [b]) -> table, number"))
+                }
+                
+                it("is described correctly with no params or return values") {
+                    let value = MethodSignature(name: .init(module: .init("foo"), name: "bar", type: .method))
+                    
+                    expect(value.description).to(equal("foo:bar()"))
+                }
+            }
+            
+            
+            context("MethodDoc") {
+                let parser = MethodDoc.parser()
+                
+                itParses(
+                    "simple function", with: parser, from:
+                        """
+                        /// foo:bar()
+                        /// Method
+                        /// This is a description.
+                        ///
+                        /// Parameters:
+                        ///  * None
+                        ///
+                        /// Returns:
+                        ///  * Nothing
+                        """,
+                    to: MethodDoc(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .method)),
+                        description: ["This is a description."],
+                        parameters: ["* None"],
+                        returns: ["* Nothing"]
+                    ),
+                    leaving: ""
+                )
+                
+                itParses(
+                    "full method", with: parser, from:
+                        """
+                        --- foo.boo:bar(a, [b]) -> number, boolean
+                        --- Method
+                        --- This is a description
+                        --- over two lines.
+                        ---
+                        --- Parameters:
+                        ---  * a - first param.
+                        ---  * b - optional param.
+                        ---
+                        --- Returns:
+                        ---  * a number.
+                        ---  * a boolean.
+                        ---
+                        --- Notes:
+                        ---  * a note.
+                        ---  * another note.
+                        """,
+                    to: MethodDoc(
+                        signature: .init(name: .init(module: .init("foo", "boo"), name: "bar", type: .method),
+                                         parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
+                                         returns: ["number", "boolean"]),
+                        description: ["This is a description","over two lines."],
+                        parameters: ["* a - first param.", "* b - optional param."],
+                        returns: ["* a number.", "* a boolean."],
+                        notes: ["* a note.", "* another note."]
+                    ),
+                    leaving: ""
+                )
+            }
         }
     }
 }

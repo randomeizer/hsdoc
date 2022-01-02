@@ -316,3 +316,44 @@ extension FunctionDoc {
         .eraseToAnyParser()
     }
 }
+
+extension MethodSignature {
+    static func parser() -> AnyParser<Substring, MethodSignature> {
+        Parse {
+            ItemNameSignature.parser(type: .method)
+            ParameterSignature.listParser()
+            Skip(optionalSpaces)
+            OneOf {
+                Parse {
+                    "->"
+                    Skip(optionalSpaces)
+                    ReturnSignature.listParser()
+                }
+                Always([ReturnSignature]())
+            }
+        }
+        .map { MethodSignature(name: $0, parameters: $1, returns: $2) }
+        .eraseToAnyParser()
+    }
+}
+
+extension MethodDoc {
+    static func parser() -> AnyParser<Substring, MethodDoc> {
+        Parse {
+            DocLine(MethodSignature.parser())
+            DocLine("Method")
+            descriptionBlock
+            parametersBlock
+            returnsBlock
+            notesBlock
+        }
+        .map { MethodDoc(
+            signature: $0,
+            description: $1,
+            parameters: $2,
+            returns: $3,
+            notes: $4
+        )}
+        .eraseToAnyParser()
+    }
+}
