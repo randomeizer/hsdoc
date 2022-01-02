@@ -1,3 +1,2 @@
-# HSDoc
-
-A description of this package.
+# hsdoc
+ Swift-based parser for Hammerspoon API documentation
