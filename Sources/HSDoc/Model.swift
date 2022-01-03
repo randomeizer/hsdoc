@@ -165,18 +165,18 @@ typealias NoteDoc = String
 
 /// Defines the documentation for a function.
 struct FunctionDoc: Equatable {
-    var signature: FunctionSignature
-    var description: [DescriptionDoc]
-    var parameters: [ParameterDoc]
-    var returns: [ReturnDoc]
-    var notes: [NoteDoc]
+    let signature: FunctionSignature
+    let description: [DescriptionDoc]
+    let parameters: [ParameterDoc]
+    let returns: [ReturnDoc]
+    let notes: [NoteDoc]?
     
     init(
         signature: FunctionSignature,
         description: [DescriptionDoc],
         parameters: [ParameterDoc],
         returns: [ReturnDoc],
-        notes: [NoteDoc] = []
+        notes: [NoteDoc]? = nil
     ) {
         self.signature = signature
         self.description = description
@@ -211,18 +211,18 @@ extension MethodSignature: CustomStringConvertible {
 
 /// Defines the documentation for a function.
 struct MethodDoc: Equatable {
-    var signature: MethodSignature
-    var description: [DescriptionDoc]
-    var parameters: [ParameterDoc]
-    var returns: [ReturnDoc]
-    var notes: [NoteDoc]
+    let signature: MethodSignature
+    let description: [DescriptionDoc]
+    let parameters: [ParameterDoc]
+    let returns: [ReturnDoc]
+    let notes: [NoteDoc]?
     
     init(
         signature: MethodSignature,
         description: [DescriptionDoc],
         parameters: [ParameterDoc],
         returns: [ReturnDoc],
-        notes: [NoteDoc] = []
+        notes: [NoteDoc]? = nil
     ) {
         self.signature = signature
         self.description = description
@@ -232,3 +232,16 @@ struct MethodDoc: Equatable {
     }
 }
 
+struct ModuleDoc: Equatable {
+    let name: ModuleName
+    let description: [DescriptionDoc]
+}
+
+/// Defines a module of functions/methods/etc.
+class Module {
+    let name: ModuleName
+    
+    init(name: ModuleName) {
+        self.name = name
+    }
+}

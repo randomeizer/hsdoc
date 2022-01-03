@@ -433,6 +433,32 @@ class ParserSpec: QuickSpec {
                     leaving: ""
                 )
             }
+            
+            context("ModuleDoc") {
+                let parser = ModuleDoc.parser()
+                
+                itParses(
+                    "module with docs", with: parser, from:
+                        """
+                        --- === foo.bar ===
+                        ---
+                        --- Description.
+                        """,
+                    to: .init(
+                        name: .init("foo", "bar"),
+                        description: ["Description."]
+                    ),
+                    leaving: "")
+            }
+            
+            context("Prefix") {
+                it("fails on a blank line when requiring at least one non-whitespace") {
+                    let parser = Prefix(1...) { !"\n".contains($0) }
+                    var input = "\n"[...]
+                    expect(parser.parse(&input)).to(beNil())
+                    expect(input).to(equal("\n"[...]))
+                }
+            }
         }
     }
 }

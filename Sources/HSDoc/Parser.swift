@@ -154,12 +154,17 @@ extension ParameterSignature {
 
 // Parses function/method return values
 extension ReturnSignature {
+    
+    /// Parses a single return signature value.
+    /// - Returns: The parser.
     static func parser() -> AnyParser<Substring, ReturnSignature> {
-        Prefix(1...) { !"\r\n,".contains($0) }
+        Prefix(1...) { !",\n".contains($0) }
         .map { ReturnSignature(String($0.trimmingCharacters(in: .whitespaces))) }
         .eraseToAnyParser()
     }
     
+    /// Parses a list of return signature values.
+    /// - Returns: The parser.
     static func listParser() -> AnyParser<Substring, [ReturnSignature]> {
         Many {
             Self.parser()
@@ -287,13 +292,10 @@ let noteLines = Many(atLeast: 1) {
     }
 }
 
-let notesBlock = OneOf {
-    Parse {
-        blankDocLines
-        DocLine("Notes:")
-        noteLines
-    }
-    Lazy {Always([NoteDoc]())}
+let notesBlock = Parse {
+    blankDocLines
+    DocLine("Notes:")
+    noteLines
 }
 
 extension FunctionDoc {
@@ -304,15 +306,9 @@ extension FunctionDoc {
             descriptionBlock
             parametersBlock
             returnsBlock
-            notesBlock
+            Optionally { notesBlock }
         }
-        .map { FunctionDoc(
-            signature: $0,
-            description: $1,
-            parameters: $2,
-            returns: $3,
-            notes: $4
-        )}
+        .map(FunctionDoc.init)
         .eraseToAnyParser()
     }
 }
@@ -332,7 +328,7 @@ extension MethodSignature {
                 Always([ReturnSignature]())
             }
         }
-        .map { MethodSignature(name: $0, parameters: $1, returns: $2) }
+        .map(MethodSignature.init)
         .eraseToAnyParser()
     }
 }
@@ -345,15 +341,46 @@ extension MethodDoc {
             descriptionBlock
             parametersBlock
             returnsBlock
-            notesBlock
+            Optionally { notesBlock }
         }
-        .map { MethodDoc(
-            signature: $0,
-            description: $1,
-            parameters: $2,
-            returns: $3,
-            notes: $4
-        )}
+        .map(MethodDoc.init)
+        .eraseToAnyParser()
+    }
+}
+
+extension ModuleName {
+    static func parser() -> AnyParser<Substring, ModuleName> {
+        Many(atLeast: 1) {
+            Identifier.parser()
+        } separatedBy: {
+            "."
+        }
+        .map { path in
+            precondition(!path.isEmpty)
+            return ModuleName(NonEmpty<[Identifier]>(path)!)
+        }
+        .eraseToAnyParser()
+    }
+}
+
+extension ModuleDoc {
+    static func parser() -> AnyParser<Substring, ModuleDoc> {
+        Parse {
+            DocLine {
+                "=== "
+                ModuleName.parser()
+                " ==="
+                Skip(optionalSpaces)
+            }
+            DocLine("")
+            Many {
+                DocLine {
+                    Rest().map(DescriptionDoc.init)
+                }
+            }
+            
+        }
+        .map { ModuleDoc(name: $0, description: $1) }
         .eraseToAnyParser()
     }
 }
