@@ -10,6 +10,8 @@ import NonEmpty
 /// A non-empty list of `String`s.
 typealias Lines = NonEmpty<[String]>
 
+// MARK: Identifier
+
 /// Identifies a module/item/paramter value. Matches the Lua identifier definition:
 ///
 /// "Identifiers in Lua can be any string of letters, digits, and underscores, not beginning with a digit.
@@ -32,6 +34,8 @@ extension Identifier: ExpressibleByStringLiteral {
         value = stringLiteral
     }
 }
+
+// MARK: ItemNameSignature
 
 /// A `Module` describes the path of a Hammerspoon module.
 struct ModuleName: Hashable {
@@ -137,28 +141,7 @@ extension ReturnSignature: ExpressibleByStringLiteral {
     }
 }
 
-/// Defines the signature for a function.
-struct FunctionSignature : Equatable {
-    let name: ItemNameSignature
-    let parameters: [ParameterSignature]
-    let returns: [ReturnSignature]?
-    
-    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
-        self.name = name
-        self.parameters = parameters
-        self.returns = returns
-    }
-}
-
-extension FunctionSignature: CustomStringConvertible {
-    var description: String {
-        let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
-        guard let returns = returns else {
-            return main
-        }
-        return "\(main) -> \(returns.map { String(describing: $0) } .joined(separator: ", "))"
-    }
-}
+// MARK: Contents
 
 /// Represents a top-level bullet-pointed list item, for lists such as 'Parameters' and 'Returns'.
 struct ListItem: Equatable {
@@ -239,6 +222,31 @@ struct NotesDoc: Equatable {
     }
 }
 
+// MARK: Function
+
+/// Defines the signature for a function.
+struct FunctionSignature : Equatable {
+    let name: ItemNameSignature
+    let parameters: [ParameterSignature]
+    let returns: [ReturnSignature]?
+    
+    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
+        self.name = name
+        self.parameters = parameters
+        self.returns = returns
+    }
+}
+
+extension FunctionSignature: CustomStringConvertible {
+    var description: String {
+        let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
+        guard let returns = returns else {
+            return main
+        }
+        return "\(main) -> \(returns.map { String(describing: $0) } .joined(separator: ", "))"
+    }
+}
+
 /// Defines the documentation for a function.
 struct FunctionDoc: Equatable {
     let signature: FunctionSignature
@@ -261,6 +269,8 @@ struct FunctionDoc: Equatable {
         self.notes = notes
     }
 }
+
+// MARK: Method
 
 /// Defines the signature for a function.
 struct MethodSignature : Equatable {
