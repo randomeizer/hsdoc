@@ -7,6 +7,9 @@
 
 import NonEmpty
 
+/// A non-empty list of `String`s.
+typealias Lines = NonEmpty<[String]>
+
 /// Identifies a module/item/paramter value. Matches the Lua identifier definition:
 ///
 /// "Identifiers in Lua can be any string of letters, digits, and underscores, not beginning with a digit.
@@ -46,9 +49,9 @@ struct ModuleName: Hashable {
     ///   - head: The first step
     ///   - tail: Additional steps.
     init(_ head: Identifier, _ tail: Identifier...) {
-        var steps = [head]
-        steps.append(contentsOf: tail)
-        self.path = .init(steps)!
+        var path = NonEmpty<[Identifier]>(head)
+        path.append(contentsOf: tail)
+        self.path = path
     }
 }
 
@@ -138,9 +141,9 @@ extension ReturnSignature: ExpressibleByStringLiteral {
 struct FunctionSignature : Equatable {
     let name: ItemNameSignature
     let parameters: [ParameterSignature]
-    let returns: [ReturnSignature]
+    let returns: [ReturnSignature]?
     
-    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature] = []) {
+    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
         self.name = name
         self.parameters = parameters
         self.returns = returns
@@ -150,33 +153,106 @@ struct FunctionSignature : Equatable {
 extension FunctionSignature: CustomStringConvertible {
     var description: String {
         let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
-        if returns.isEmpty {
+        guard let returns = returns else {
             return main
         }
         return "\(main) -> \(returns.map { String(describing: $0) } .joined(separator: ", "))"
     }
 }
 
-#warning("Define types for description/parameter/return/notes/etc.")
-typealias DescriptionDoc = String
-typealias ParameterDoc = String
-typealias ReturnDoc = String
-typealias NoteDoc = String
+/// Represents a top-level bullet-pointed list item, for lists such as 'Parameters' and 'Returns'.
+struct ListItem: Equatable {
+    typealias Lines = NonEmpty<[String]>
+    
+    let lines: Lines
+    
+    init(lines: Lines) {
+        self.lines = lines
+    }
+    
+    init(_ head: String, _ tail: String...) {
+        var lines = Lines(head)
+        lines.append(contentsOf: tail)
+        self.lines = lines
+    }
+}
+
+typealias List = NonEmpty<[ListItem]>
+
+/// Stores description text for an item.
+struct DescriptionDoc: Equatable {
+    typealias Lines = NonEmpty<[String]>
+    
+    let lines: Lines
+    
+    init(_ lines: Lines) {
+        self.lines = lines
+    }
+    
+    init(_ head: String, _ tail: String...) {
+        var lines = Lines(head)
+        lines.append(contentsOf: tail)
+        self.lines = lines
+    }
+}
+
+struct ParametersDoc: Equatable {
+    let items: List
+    
+    init(items: List) {
+        self.items = items
+    }
+    
+    init(_ head: ListItem, _ tail: ListItem...) {
+        var items = List(head)
+        items.append(contentsOf: tail)
+        self.items = items
+    }
+}
+
+struct ReturnsDoc: Equatable {
+    let items: List
+    
+    init(items: List) {
+        self.items = items
+    }
+    
+    init(_ head: ListItem, _ tail: ListItem...) {
+        var items = List(head)
+        items.append(contentsOf: tail)
+        self.items = items
+    }
+}
+
+/// The list of `Notes` for the item.
+struct NotesDoc: Equatable {
+    let items: List
+    
+    init(items: List) {
+        self.items = items
+    }
+    
+    init(_ head: ListItem, _ tail: ListItem...) {
+        var items = List(head)
+        items.append(contentsOf: tail)
+        self.items = items
+    }
+}
 
 /// Defines the documentation for a function.
 struct FunctionDoc: Equatable {
     let signature: FunctionSignature
-    let description: [DescriptionDoc]
-    let parameters: [ParameterDoc]
-    let returns: [ReturnDoc]
-    let notes: [NoteDoc]?
+    let description: DescriptionDoc
+    let parameters: ParametersDoc
+    let returns: ReturnsDoc
+    let notes: NotesDoc?
     
     init(
         signature: FunctionSignature,
-        description: [DescriptionDoc],
-        parameters: [ParameterDoc],
-        returns: [ReturnDoc],
-        notes: [NoteDoc]? = nil
+        description: DescriptionDoc,
+        parameters: ParametersDoc,
+        returns: ReturnsDoc,
+        notes: NotesDoc? = nil
     ) {
         self.signature = signature
         self.description = description
@@ -190,9 +266,9 @@ struct FunctionDoc: Equatable {
 struct MethodSignature : Equatable {
     let name: ItemNameSignature
     let parameters: [ParameterSignature]
-    let returns: [ReturnSignature]
+    let returns: [ReturnSignature]?
     
-    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature] = []) {
+    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
         self.name = name
         self.parameters = parameters
         self.returns = returns
@@ -202,7 +278,7 @@ struct MethodSignature : Equatable {
 extension MethodSignature: CustomStringConvertible {
     var description: String {
         let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
-        if returns.isEmpty {
+        guard let returns = returns else {
             return main
         }
         return "\(main) -> \(returns.map { String(describing: $0) } .joined(separator: ", "))"
@@ -212,17 +288,17 @@ extension MethodSignature: CustomStringConvertible {
 /// Defines the documentation for a function.
 struct MethodDoc: Equatable {
     let signature: MethodSignature
-    let description: [DescriptionDoc]
-    let parameters: [ParameterDoc]
-    let returns: [ReturnDoc]
-    let notes: [NoteDoc]?
+    let description: DescriptionDoc
+    let parameters: ParametersDoc
+    let returns: ReturnsDoc
+    let notes: NotesDoc?
     
     init(
         signature: MethodSignature,
-        description: [DescriptionDoc],
-        parameters: [ParameterDoc],
-        returns: [ReturnDoc],
-        notes: [NoteDoc]? = nil
+        description: DescriptionDoc,
+        parameters: ParametersDoc,
+        returns: ReturnsDoc,
+        notes: NotesDoc? = nil
     ) {
         self.signature = signature
         self.description = description
@@ -232,16 +308,104 @@ struct MethodDoc: Equatable {
     }
 }
 
+// MARK: Variable
+
+typealias VariableType = String
+
+struct VariableSignature: Equatable {
+    let name: ItemNameSignature
+    let type: VariableType?
+}
+
+extension VariableSignature: CustomStringConvertible {
+    var description: String {
+        if let type = type {
+            return "\(name) \(type)"
+        } else {
+            return "\(name)"
+        }
+    }
+}
+
+struct VariableDoc: Equatable {
+    let signature: VariableSignature
+    let description: DescriptionDoc
+    let notes: NotesDoc?
+    
+    init(
+        signature: VariableSignature,
+        description: DescriptionDoc,
+        notes: NotesDoc? = nil
+    ) {
+        self.signature = signature
+        self.description = description
+        self.notes = notes
+    }
+}
+
+// MARK: Field
+
+typealias FieldType = String
+
+struct FieldSignature: Equatable {
+    let name: ItemNameSignature
+    let type: FieldType?
+}
+
+extension FieldSignature: CustomStringConvertible {
+    var description: String {
+        if let type = type {
+            return "\(name) \(type)"
+        } else {
+            return "\(name)"
+        }
+    }
+}
+
+struct FieldDoc: Equatable {
+    let signature: FieldSignature
+    let description: DescriptionDoc
+    let notes: NotesDoc?
+    
+    init(
+        signature: FieldSignature,
+        description: DescriptionDoc,
+        notes: NotesDoc? = nil
+    ) {
+        self.signature = signature
+        self.description = description
+        self.notes = notes
+    }
+}
+
+// MARK: Module
+
+/// Defines the documentation for a `Module`.
 struct ModuleDoc: Equatable {
     let name: ModuleName
-    let description: [DescriptionDoc]
+    let description: DescriptionDoc
 }
 
 /// Defines a module of functions/methods/etc.
 class Module {
     let name: ModuleName
     
-    init(name: ModuleName) {
+    let doc: ModuleDoc
+    
+    /// The list of fields defined for the module.
+    var fields: [FieldDoc] = []
+    
+    /// The list of functions defined for the module.
+    var functions: [FunctionDoc] = []
+    
+    /// The list of methods defined for the module.
+    var methods: [MethodDoc] = []
+    
+    /// The list of variables defined for the module.
+    var variables: [VariableSignature] = []
+    
+    init(name: ModuleName, doc: ModuleDoc) {
         self.name = name
+        self.doc = doc
     }
 }

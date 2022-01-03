@@ -12,27 +12,8 @@ import Parsing
 
 @testable import HSDoc
 
-let fieldExample = """
-/// hs.module.field -> table
-/// Field
-/// A field in the module.
-"""
-
-let methodExample = """
-/// hs.module:method(arg1[, arg2]) -> string
-/// Method
-/// A method in an instance of the module.
-///
-/// Parameters:
-///  * arg1 - a required argument
-///  * arg2 - an optional argument
-///
-/// Returns:
-///  * A `string` value.
-"""
-
 /// Parses the given input to the expected output with the given parser.
-func itParses<P,Output>(_ label: String, with parser: P, from input: String, to expected: Output?, leaving remainder: String, file: FileString = #file, line: UInt = #line)
+func itParses<P,Output>(_ label: String, with parser: P, from input: String, to expected: Output?, leaving remainder: String = "", file: FileString = #file, line: UInt = #line)
 where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
 {
     it("\((expected != nil).succeedsOrFails) parsing \(label)") {
@@ -40,13 +21,33 @@ where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
         let actual = parser.parse(&inputSub)
         
         if expected == nil {
-            expect(file: file, line: line, actual).to(beNil())
+            expect(file: file, line: line, actual).to(beNil(), description: "to")
         } else {
-            expect(file: file, line: line, actual).to(equal(expected))
+            expect(file: file, line: line, actual).to(equal(expected), description: "to")
         }
         
-        expect(file: file, line: line, inputSub).to(equal(remainder[...]))
+        expect(file: file, line: line, inputSub).to(equal(remainder[...]), description: "leaving")
     }
+}
+
+/// Parses the given input to the expected output with the given parser.
+func itParses<P,Output>(_ label: String, with parser: P, file: FileString = #file, line: UInt = #line, from input: () -> String, to expected: () -> Output?, leaving remainder: () -> String = {""})
+where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+{
+    itParses(label, with: parser, from: input(), to: expected(), leaving: remainder(), file: file, line: line)
+}
+
+func itFailsParsing<P,Output>(_ label: String, with parser: P, from input: String, file: FileString = #file, line: UInt = #line)
+where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+{
+    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
+}
+
+func itFailsParsing<P,Output>(_ label: String, with parser: P, file: FileString = #file, line: UInt = #line, from input: () -> String)
+where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+{
+    let input = input()
+    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
 }
 
 class ParserSpec: QuickSpec {
@@ -106,92 +107,143 @@ class ParserSpec: QuickSpec {
                 context("any type") {
                     let parser = ItemNameSignature.parser()
                     
-                    itParses("no module", with: parser, from: "bar",
-                             to: nil,
-                             leaving: "bar")
-                    itParses("single", with: parser, from: "foo.bar",
-                             to: .init(module: .init("foo"), name: "bar", type: .value),
-                             leaving: "")
-                    itParses("double", with: parser, from: "foo.boo.bar",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .value),
-                             leaving: "")
-                    itParses("no module func", with: parser, from: "bar(a)",
-                             to: nil,
-                             leaving: "bar(a)")
-                    itParses("function", with: parser, from: "foo.boo.bar(a)",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .value),
-                             leaving: "(a)")
-                    itParses("method", with: parser, from: "foo.boo:bar(a)",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .method),
-                             leaving: "(a)")
+                    itParses("single", with: parser) {
+                        "foo.bar"
+                    } to: {
+                        .init(module: .init("foo"), name: "bar", type: .value)
+                    }
+                    
+                    itParses("double", with: parser) {
+                        "foo.boo.bar"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
+                    }
+                    
+                    itParses("function", with: parser) {
+                        "foo.boo.bar(a)"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
+                    } leaving: {
+                        "(a)"
+                    }
+                    
+                    itParses("method", with: parser) {
+                        "foo.boo:bar(a)"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .method)
+                    } leaving: {
+                        "(a)"
+                    }
+                    
+                    itFailsParsing("no module", with: parser) {
+                        "bar"
+                    }
+                    
+                    itFailsParsing("no module func", with: parser) {
+                        "bar(a)"
+                    }
                 }
                 
                 context("value type") {
                     let parser = ItemNameSignature.parser(type: .value)
                     
-                    itParses("no module", with: parser, from: "bar",
-                             to: nil,
-                             leaving: "bar")
-                    itParses("single", with: parser, from: "foo.bar",
-                             to: .init(module: .init("foo"), name: "bar", type: .value),
-                             leaving: "")
-                    itParses("double", with: parser, from: "foo.boo.bar",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .value),
-                             leaving: "")
-                    itParses("no module func", with: parser, from: "bar(a)",
-                             to: nil,
-                             leaving: "bar(a)")
-                    itParses("function", with: parser, from: "foo.boo.bar(a)",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .value),
-                             leaving: "(a)")
-                    itParses("method", with: parser, from: "foo.boo:bar(a)",
-                             to: nil,
-                             leaving: "foo.boo:bar(a)")
+                    itParses("single", with: parser) {
+                        "foo.bar"
+                    } to: {
+                        .init(module: .init("foo"), name: "bar", type: .value)
+                    }
+                    
+                    itParses("double", with: parser) {
+                        "foo.boo.bar"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
+                    }
+                    
+                    itParses("function", with: parser) {
+                        "foo.boo.bar(a)"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
+                    } leaving: {
+                        "(a)"
+                    }
+                    
+                    itFailsParsing("method", with: parser) {
+                        "foo.boo:bar(a)"
+                    }
+                    
+                    itFailsParsing("no module", with: parser) {
+                        "bar"
+                    }
+                    
+                    itFailsParsing("no module func", with: parser) {
+                        "bar(a)"
+                    }
                 }
                 
                 context("method type") {
                     let parser = ItemNameSignature.parser(type: .method)
                     
-                    itParses("no module", with: parser, from: "bar",
-                             to: nil,
-                             leaving: "bar")
-                    itParses("single", with: parser, from: "foo.bar",
-                             to: nil,
-                             leaving: "foo.bar")
-                    itParses("double", with: parser, from: "foo.boo.bar",
-                             to: nil,
-                             leaving: "foo.boo.bar")
-                    itParses("no module func", with: parser, from: "bar(a)",
-                             to: nil,
-                             leaving: "bar(a)")
-                    itParses("function", with: parser, from: "foo.boo.bar(a)",
-                             to: nil,
-                             leaving: "foo.boo.bar(a)")
-                    itParses("method", with: parser, from: "foo.boo:bar(a)",
-                             to: .init(module: .init("foo", "boo"), name: "bar", type: .method),
-                             leaving: "(a)")
-                }
+                    itFailsParsing("single", with: parser) {
+                        "foo.bar"
+                    }
+                    
+                    itFailsParsing("double", with: parser) {
+                        "foo.boo.bar"
+                    }
+                    
+                    itFailsParsing("function", with: parser) {
+                        "foo.boo.bar(a)"
+                    }
+                    
+                    itParses("method", with: parser) {
+                        "foo.boo:bar(a)"
+                    } to: {
+                        .init(module: .init("foo", "boo"), name: "bar", type: .method)
+                    } leaving: {
+                        "(a)"
+                    }
+                    
+                    itFailsParsing("no module", with: parser) {
+                        "bar"
+                    }
+                    
+                    itFailsParsing("no module func", with: parser) {
+                        "bar(a)"
+                    }                }
             }
             
             context("ParameterSignature") {
                 let parser = ParameterSignature.parser()
                 
-                itParses("required", with: parser, from: "foo",
-                         to: .init(name: "foo", isOptional: false),
-                         leaving: "")
-                itParses("optional", with: parser, from: "[foo]",
-                         to: .init(name: "foo", isOptional: true),
-                         leaving: "")
-                itParses("unclosed optional", with: parser, from: "[foo",
-                         to: nil, leaving: "[foo")
-                itParses("unopened optional", with: parser, from: "foo]",
-                         to: .init(name: "foo", isOptional: false),
-                         leaving: "]")
-                itParses("full", with: parser, from: "_foo123",
-                         to: .init(name: "_foo123", isOptional: false),
-                         leaving: "")
-                itParses("number", with: parser, from: "123_foo",
-                         to: nil, leaving: "123_foo")
+                itParses("required", with: parser) {
+                    "foo"
+                } to: {
+                    .init(name: "foo", isOptional: false)
+                }
+                
+                itParses("optional", with: parser) {
+                    "[foo]"
+                } to: {
+                    .init(name: "foo", isOptional: true)
+                }
+                
+                itFailsParsing("unclosed optional", with: parser) { "[foo" }
+                
+                itParses("unopened optional", with: parser) {
+                    "foo]"
+                } to: {
+                    .init(name: "foo", isOptional: false)
+                } leaving: {
+                    "]"
+                }
+                
+                itParses("full", with: parser) {
+                    "_foo123"
+                } to: {
+                    .init(name: "_foo123", isOptional: false)
+                }
+                
+                itFailsParsing("number", with: parser) { "123_foo" }
                 
                 it("is described correctly") {
                     expect(ParameterSignature(name: "foo", isOptional: false).description).to(equal("foo"))
@@ -202,19 +254,34 @@ class ParserSpec: QuickSpec {
                     let parser = ParameterSignature.listParser()
                     
                     itParses("empty", with: parser, from: "()", to: [], leaving: "")
-                    itParses("one", with: parser, from: "(foo)",
-                             to: [.init(name: "foo")],
-                             leaving: "")
-                    itParses("two", with: parser, from: "(foo, bar)",
-                             to: [.init(name: "foo"), .init(name: "bar")],
-                             leaving: "")
-                    itParses("optional", with: parser, from: "([foo])",
-                             to: [.init(name: "foo", isOptional: true)],
-                             leaving: "")
-                    itParses("mixed", with: parser, from: "(foo, [bar])",
-                             to: [.init(name: "foo"), .init(name: "bar", isOptional: true)],
-                             leaving: "")
-                    itParses("extra comma", with: parser, from: "(foo,)", to: nil, leaving: "(foo,)")
+                    
+                    itParses("one", with: parser) {
+                        "(foo)"
+                    } to: {
+                        [.init(name: "foo")]
+                    }
+                    
+                    itParses("two", with: parser) {
+                        "(foo, bar)"
+                    } to: {
+                        [.init(name: "foo"), .init(name: "bar")]
+                    }
+                    
+                    itParses("optional", with: parser) {
+                        "([foo])"
+                    } to: {
+                        [.init(name: "foo", isOptional: true)]
+                    }
+                    
+                    itParses("mixed", with: parser) {
+                        "(foo, [bar])"
+                    } to: {
+                        [.init(name: "foo"), .init(name: "bar", isOptional: true)]
+                    }
+                    
+                    itFailsParsing("extra comma", with: parser) {
+                        "(foo,)"
+                    }
                 }
             }
             
@@ -222,31 +289,68 @@ class ParserSpec: QuickSpec {
                 let parser = ReturnSignature.parser()
                 
                 itParses("something", with: parser, from: "foo", to: .init("foo"), leaving: "")
-                itParses("nothing", with: parser, from: "", to: nil, leaving: "")
-                itParses("blank line", with: parser, from: "\n", to: nil, leaving: "\n")
+                itFailsParsing("nothing", with: parser, from: "")
+                itFailsParsing("blank line", with: parser, from: "\n")
                 
                 context("list") {
                     let parser = ReturnSignature.listParser()
                     
                     itParses("nothing", with: parser, from: "", to: [], leaving: "")
-                    itParses("one", with: parser, from: "foo", to: [.init("foo")], leaving: "")
-                    itParses("two", with: parser, from: "foo, bar", to: ["foo", "bar"], leaving: "")
-                    itParses("alternate", with: parser, from: "foo, bar | nil", to: ["foo", "bar | nil"], leaving: "")
-                    itParses("trimming whitespace", with: parser, from: " foo , bar \t", to: ["foo", "bar"], leaving: "")
+                    
+                    itParses("one", with: parser) {
+                        "foo"
+                    } to: {
+                        [ReturnSignature("foo")]
+                    }
+                    
+                    itParses("two", with: parser) {
+                        "foo, bar"
+                    } to: {
+                        ["foo", "bar"]
+                    }
+                    
+                    itParses("alternate", with: parser) {
+                        "foo, bar | nil"
+                    } to: {
+                        ["foo", "bar | nil"]
+                    }
+                    
+                    itParses("trimming whitespace", with: parser) {
+                        " foo , bar \t"
+                    } to: {
+                        ["foo", "bar"]
+                    }
                 }
             }
             
             context("FunctionSignature") {
                 let parser = FunctionSignature.parser()
                 
-                itParses("function with params and returns", with: parser, from: "foo.bar(a, b) -> table, number",
-                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .value), parameters: [.init(name: "a"), .init(name: "b")], returns: ["table", "number"]), leaving: "")
+                itParses("function with params and returns", with: parser) {
+                    "foo.bar(a, b) -> table, number"
+                } to: {
+                    FunctionSignature(
+                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        parameters: [.init(name: "a"), .init(name: "b")],
+                        returns: ["table", "number"]
+                    )
+                }
                 
-                itParses("function with optional param", with: parser, from: "foo.bar([a])",
-                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .value), parameters: [.init(name: "a", isOptional: true)]), leaving: "")
+                itParses("function with optional param", with: parser) {
+                    "foo.bar([a])"
+                } to: {
+                    .init(
+                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        parameters: [.init(name: "a", isOptional: true)]
+                    )
+                }
                 
                 it("is described correctly with return values") {
-                    let value = FunctionSignature(name: .init(module: .init("foo"), name: "bar", type: .value), parameters: [.init(name: "a"), .init(name: "b", isOptional: true)], returns: ["table", "number"])
+                    let value = FunctionSignature(
+                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
+                        returns: ["table", "number"]
+                    )
                     
                     expect(value.description).to(equal("foo.bar(a, [b]) -> table, number"))
                 }
@@ -298,165 +402,350 @@ class ParserSpec: QuickSpec {
             context("FunctionDoc") {
                 let parser = FunctionDoc.parser()
                 
-                itParses(
-                    "simple function", with: parser, from:
-                        """
-                        /// foo.bar()
-                        /// Function
-                        /// This is a description.
-                        ///
-                        /// Parameters:
-                        ///  * None
-                        ///
-                        /// Returns:
-                        ///  * Nothing
-                        """,
-                    to: FunctionDoc(
+                itParses("simple function", with: parser) {
+                    """
+                    /// foo.bar()
+                    /// Function
+                    /// This is a description.
+                    ///
+                    /// Parameters:
+                    ///  * None
+                    ///
+                    /// Returns:
+                    ///  * Nothing
+                    """
+                } to: {
+                    FunctionDoc(
                         signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value)),
-                        description: ["This is a description."],
-                        parameters: ["* None"],
-                        returns: ["* Nothing"]
-                    ),
-                    leaving: ""
-                )
-                
-                itParses(
-                    "full function", with: parser, from:
-                        """
-                        --- foo.boo.bar(a, [b]) -> number, boolean
-                        --- Function
-                        --- This is a description
-                        --- over two lines.
-                        ---
-                        --- Parameters:
-                        ---  * a - first param.
-                        ---  * b - optional param.
-                        ---
-                        --- Returns:
-                        ---  * a number.
-                        ---  * a boolean.
-                        ---
-                        --- Notes:
-                        ---  * a note.
-                        ---  * another note.
-                        """,
-                    to: FunctionDoc(
+                        description: .init("This is a description."),
+                        parameters: .init(ListItem("None")),
+                        returns: .init(ListItem("Nothing"))
+                    )
+                }
+
+                itParses("full function", with: parser) {
+                    """
+                    --- foo.boo.bar(a, [b]) -> number, boolean
+                    --- Function
+                    --- This is a description
+                    --- over two lines.
+                    ---
+                    --- Parameters:
+                    ---  * a - first param
+                    ---    with multi-line description.
+                    ---  * b - optional param.
+                    ---
+                    --- Returns:
+                    ---  * a number.
+                    ---  * a boolean.
+                    ---
+                    --- Notes:
+                    ---  * a note.
+                    ---  * another note.
+                    """
+                } to: {
+                    FunctionDoc(
                         signature: .init(name: .init(module: .init("foo", "boo"), name: "bar", type: .value),
                                          parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
                                          returns: ["number", "boolean"]),
-                        description: ["This is a description","over two lines."],
-                        parameters: ["* a - first param.", "* b - optional param."],
-                        returns: ["* a number.", "* a boolean."],
-                        notes: ["* a note.", "* another note."]
-                    ),
-                    leaving: ""
-                )
+                        description: .init("This is a description","over two lines."),
+                        parameters: .init(
+                            ListItem("a - first param", "  with multi-line description."),
+                            ListItem("b - optional param.")
+                        ),
+                        returns: .init(ListItem("a number."), ListItem("a boolean.")),
+                        notes: .init(
+                            ListItem("a note."),
+                            ListItem("another note.")
+                        )
+                    )
+                }
             }
             
             context("MethodSignature") {
                 let parser = MethodSignature.parser()
                 
-                itParses("function with params and returns", with: parser, from: "foo:bar(a, b) -> table, number",
-                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a"), .init(name: "b")], returns: ["table", "number"]), leaving: "")
+                itParses("function with params and returns", with: parser) {
+                    "foo:bar(a, b) -> table, number"
+                } to: {
+                    .init(
+                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        parameters: [.init(name: "a"), .init(name: "b")],
+                        returns: ["table", "number"]
+                    )
+                }
                 
-                itParses("function with optional param", with: parser, from: "foo:bar([a])",
-                         to: .init(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a", isOptional: true)]), leaving: "")
+                itParses("function with optional param", with: parser) {
+                    "foo:bar([a])"
+                } to: {
+                    .init(
+                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        parameters: [.init(name: "a", isOptional: true)]
+                    )
+                }
                 
                 it("is described correctly with return values") {
-                    let value = MethodSignature(name: .init(module: .init("foo"), name: "bar", type: .method), parameters: [.init(name: "a"), .init(name: "b", isOptional: true)], returns: ["table", "number"])
+                    let value = MethodSignature(
+                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
+                        returns: ["table", "number"]
+                    )
                     
                     expect(value.description).to(equal("foo:bar(a, [b]) -> table, number"))
                 }
                 
                 it("is described correctly with no params or return values") {
-                    let value = MethodSignature(name: .init(module: .init("foo"), name: "bar", type: .method))
+                    let value = MethodSignature(
+                        name: .init(module: .init("foo"), name: "bar", type: .method)
+                    )
                     
                     expect(value.description).to(equal("foo:bar()"))
                 }
             }
             
-            
             context("MethodDoc") {
                 let parser = MethodDoc.parser()
                 
-                itParses(
-                    "simple function", with: parser, from:
-                        """
-                        /// foo:bar()
-                        /// Method
-                        /// This is a description.
-                        ///
-                        /// Parameters:
-                        ///  * None
-                        ///
-                        /// Returns:
-                        ///  * Nothing
-                        """,
-                    to: MethodDoc(
+                itParses("simple function", with: parser) {
+                    """
+                    /// foo:bar()
+                    /// Method
+                    /// This is a description.
+                    ///
+                    /// Parameters:
+                    ///  * None
+                    ///
+                    /// Returns:
+                    ///  * Nothing
+                    """
+                } to: {
+                    MethodDoc(
                         signature: .init(name: .init(module: .init("foo"), name: "bar", type: .method)),
-                        description: ["This is a description."],
-                        parameters: ["* None"],
-                        returns: ["* Nothing"]
-                    ),
-                    leaving: ""
-                )
+                        description: .init("This is a description."),
+                        parameters: .init(ListItem("None")),
+                        returns: .init(ListItem("Nothing"))
+                    )
+                }
                 
-                itParses(
-                    "full method", with: parser, from:
-                        """
-                        --- foo.boo:bar(a, [b]) -> number, boolean
-                        --- Method
-                        --- This is a description
-                        --- over two lines.
-                        ---
-                        --- Parameters:
-                        ---  * a - first param.
-                        ---  * b - optional param.
-                        ---
-                        --- Returns:
-                        ---  * a number.
-                        ---  * a boolean.
-                        ---
-                        --- Notes:
-                        ---  * a note.
-                        ---  * another note.
-                        """,
-                    to: MethodDoc(
-                        signature: .init(name: .init(module: .init("foo", "boo"), name: "bar", type: .method),
-                                         parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
-                                         returns: ["number", "boolean"]),
-                        description: ["This is a description","over two lines."],
-                        parameters: ["* a - first param.", "* b - optional param."],
-                        returns: ["* a number.", "* a boolean."],
-                        notes: ["* a note.", "* another note."]
-                    ),
-                    leaving: ""
-                )
+                itParses("full method", with: parser) {
+                    """
+                    --- foo.boo:bar(a, [b]) -> number, boolean
+                    --- Method
+                    --- This is a description
+                    --- over two lines.
+                    ---
+                    --- Parameters:
+                    ---  * a - first param.
+                    ---  * b - optional param.
+                    ---
+                    --- Returns:
+                    ---  * a number.
+                    ---  * a boolean.
+                    ---
+                    --- Notes:
+                    ---  * a note.
+                    ---  * another note.
+                    """
+                } to: {
+                    MethodDoc(
+                        signature: .init(
+                            name: .init(module: .init("foo", "boo"), name: "bar", type: .method),
+                            parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
+                            returns: ["number", "boolean"]
+                        ),
+                        description: .init("This is a description","over two lines."),
+                        parameters: .init(
+                            ListItem("a - first param."),
+                            ListItem("b - optional param.")
+                        ),
+                        returns: .init(
+                            ListItem("a number."),
+                            ListItem("a boolean.")
+                        ),
+                        notes: .init(
+                            ListItem("a note."),
+                            ListItem("another note.")
+                        )
+                    )
+                }
+            }
+            
+            context("VariableSignature") {
+                let parser = VariableSignature.parser()
+                
+                itParses("simple", with: parser) {
+                    "foo.bar"
+                } to: {
+                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                }
+                
+                itParses("typed", with: parser) {
+                    "foo.bar <table>"
+                } to: {
+                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table>")
+                }
+                
+                itFailsParsing("function", with: parser) {
+                    "foo.bar()"
+                }
+                
+                itFailsParsing("method", with: parser) {
+                    "foo:bar()"
+                }
+
+            }
+            
+            context("VariableDoc") {
+                let parser = VariableDoc.parser()
+                
+                itParses("simple", with: parser) {
+                    """
+                    /// foo.bar
+                    /// Variable
+                    /// Description.
+                    """
+                } to: {
+                    VariableDoc(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil),
+                        description: .init("Description.")
+                    )
+                }
+                
+                itParses("full", with: parser) {
+                    """
+                    --- foo.bar <table: number>
+                    --- Variable
+                    --- Description.
+                    ---
+                    --- Notes:
+                    ---  * One
+                    ---  * Two
+                    foo.bar = {}
+                    """
+                } to: {
+                    VariableDoc(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table: number>"),
+                        description: .init("Description."),
+                        notes: .init(
+                            ListItem("One"),
+                            ListItem("Two")
+                        )
+                    )
+                } leaving: {
+                    "foo.bar = {}"
+                }
+                
+                itFailsParsing("function signature", with: parser) {
+                    """
+                    /// foo.bar()
+                    /// Variable
+                    /// Description.
+                    """
+                }
+                
+                itFailsParsing("missing Variable", with: parser) {
+                    """
+                    /// foo.bar
+                    /// Description.
+                    """
+                }
+            }
+            
+            context("FieldSignature") {
+                let parser = FieldSignature.parser()
+                
+                itParses("simple", with: parser) {
+                    "foo.bar"
+                } to: {
+                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                }
+                
+                itParses("typed", with: parser) {
+                    "foo.bar <table>"
+                } to: {
+                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table>")
+                }
+                
+                itFailsParsing("function", with: parser) {
+                    "foo.bar()"
+                }
+                
+                itFailsParsing("method", with: parser) {
+                    "foo:bar()"
+                }
+
+            }
+            
+            context("FieldDoc") {
+                let parser = FieldDoc.parser()
+                
+                itParses("simple", with: parser) {
+                    """
+                    /// foo.bar
+                    /// Field
+                    /// Description.
+                    """
+                } to: {
+                    FieldDoc(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil),
+                        description: .init("Description.")
+                    )
+                }
+                
+                itParses("full", with: parser) {
+                    """
+                    --- foo.bar <table: number>
+                    --- Field
+                    --- Description.
+                    ---
+                    --- Notes:
+                    ---  * One
+                    ---  * Two
+                    foo.bar = {}
+                    """
+                } to: {
+                    FieldDoc(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table: number>"),
+                        description: .init("Description."),
+                        notes: .init(
+                            ListItem("One"),
+                            ListItem("Two")
+                        )
+                    )
+                } leaving: {
+                    "foo.bar = {}"
+                }
+                
+                itFailsParsing("function signature", with: parser) {
+                    """
+                    /// foo.bar()
+                    /// Field
+                    /// Description.
+                    """
+                }
+                
+                itFailsParsing("missing Field", with: parser) {
+                    """
+                    /// foo.bar
+                    /// Description.
+                    """
+                }
             }
             
             context("ModuleDoc") {
                 let parser = ModuleDoc.parser()
                 
-                itParses(
-                    "module with docs", with: parser, from:
-                        """
-                        --- === foo.bar ===
-                        ---
-                        --- Description.
-                        """,
-                    to: .init(
+                itParses("module with docs", with: parser) {
+                    """
+                    --- === foo.bar ===
+                    ---
+                    --- Description.
+                    """
+                } to: {
+                    .init(
                         name: .init("foo", "bar"),
-                        description: ["Description."]
-                    ),
-                    leaving: "")
-            }
-            
-            context("Prefix") {
-                it("fails on a blank line when requiring at least one non-whitespace") {
-                    let parser = Prefix(1...) { !"\n".contains($0) }
-                    var input = "\n"[...]
-                    expect(parser.parse(&input)).to(beNil())
-                    expect(input).to(equal("\n"[...]))
+                        description: .init("Description.")
+                    )
                 }
             }
         }

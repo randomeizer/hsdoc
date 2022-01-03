@@ -3,7 +3,6 @@
 //  HSDoc
 //
 //  Created by David Peterson on 31/12/21.
-//  Copyright © 2021 Hammerspoon. All rights reserved.
 //
 
 import Foundation
@@ -175,26 +174,6 @@ extension ReturnSignature {
     }
 }
 
-extension FunctionSignature {
-    static func parser() -> AnyParser<Substring, FunctionSignature> {
-        Parse {
-            ItemNameSignature.parser(type: .value)
-            ParameterSignature.listParser()
-            Skip(optionalSpaces)
-            OneOf {
-                Parse {
-                    "->"
-                    Skip(optionalSpaces)
-                    ReturnSignature.listParser()
-                }
-                Always([ReturnSignature]())
-            }
-        }
-        .map { FunctionSignature(name: $0, parameters: $1, returns: $2) }
-        .eraseToAnyParser()
-    }
-}
-
 // Parses documentation comment prefixes, including a single optional space.
 let docPrefix = Parse {
     OneOf {
@@ -206,6 +185,7 @@ let docPrefix = Parse {
 
 /// Parses a single 'documentation' comment line, starting with `///` or `---` and ending with a newline
 /// The `Upstream` `Parser` will only be passed the contents of a single line, excluding the header and the newline.
+/// It must consume the whole contents of the line, other than trailing whitespace.
 struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Substring {
     let upstream: Upstream
     
@@ -228,6 +208,7 @@ struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Subst
         }
         .pipe(Parse {
             upstream
+            Skip(optionalSpaces)
             End()
         })
         .parse(&input)
@@ -237,65 +218,132 @@ struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Subst
 // Parses at least one blank documentation line ("///")
 let blankDocLines = Skip(Many(atLeast: 1) { DocLine("") })
 
-// Parses at least one description line.
-let descriptionBlock = Many(atLeast: 1) {
-    DocLine {
-        Prefix(1) { !" \n".contains($0) }
-        Rest()
-    }.map {
-        DescriptionDoc("\($0)\($1)")
+extension DescriptionDoc {
+    static func parser() -> AnyParser<Substring, DescriptionDoc> {
+        Many(atLeast: 1) {
+            DocLine {
+                optionalSpaces
+                Prefix(1...)
+            }
+            .map { "\($0)\($1)" }
+        }
+        .map { DescriptionDoc(.init($0)!) }
+        .eraseToAnyParser()
     }
 }
 
-#warning("Does not handle multi-line parameter descriptions.")
-let parameterLines = Many(atLeast: 1) {
-    DocLine {
-        Skip(optionalSpaces)
-        "*"
-        Rest()
-    }.map {
-        ParameterDoc("*\($0)")
+extension ListItem {
+    /// Creates a `Parser` for list items.
+    /// - Returns: The `Parser`.
+    static func parser() -> Parsers.ListItemParser {
+        .init()
     }
 }
 
-let parametersBlock = Parse {
-    blankDocLines
-    DocLine("Parameters:")
-    parameterLines
-}
-
-#warning("Does not handle multi-line return values.")
-let returnLines = Many(atLeast: 1) {
-    DocLine {
-        Skip(optionalSpaces)
-        "*"
-        Rest()
-    }.map {
-        ReturnDoc("*\($0)")
+extension List {
+    static func parser() -> AnyParser<Substring, List> {
+        Many(atLeast: 1) {
+            ListItem.parser()
+        }
+        .map {
+            precondition(!$0.isEmpty)
+            return List($0)!
+        }
+        .eraseToAnyParser()
     }
 }
 
-let returnsBlock = Parse {
-    blankDocLines
-    DocLine("Returns:")
-    returnLines
-}
+extension Parsers {
+    /// Parses a 'list item' line, along with any following lines which are sub-elements of the item, due to indentation.
+    struct ListItemParser: Parser
+    {
+        func parse(_ input: inout Substring) -> ListItem? {
+            var inputCopy = input
+            let listItemFirstLine = DocLine {
+                optionalSpaces
+                "* "
+                Rest()
+            }
 
-#warning("Does not handle multi-line notes.")
-let noteLines = Many(atLeast: 1) {
-    DocLine {
-        Skip(optionalSpaces)
-        "*"
-        Rest()
-    }.map {
-        NoteDoc("*\($0)")
+            guard let (inset, body) = listItemFirstLine.parse(&inputCopy) else {
+                return nil
+            }
+            
+            let subLineParser = Many {
+                DocLine {
+                    Skip(String(inset))
+                    Prefix(1) { $0 != "*" }
+                    Rest()
+                }
+                .map { "\($0)\($1)" }
+            }
+            guard let subLines = subLineParser.parse(&inputCopy) else {
+                return nil
+            }
+            
+            var lines = ListItem.Lines(String(body))
+            lines.append(contentsOf: subLines)
+            
+            input = inputCopy
+            return ListItem(lines: lines)
+        }
     }
 }
 
-let notesBlock = Parse {
-    blankDocLines
-    DocLine("Notes:")
-    noteLines
+extension ParametersDoc {
+    static func parser() -> AnyParser<Substring, ParametersDoc> {
+        Parse {
+            blankDocLines
+            DocLine("Parameters:")
+            List.parser()
+        }
+        .map(ParametersDoc.init(items:))
+        .eraseToAnyParser()
+    }
+}
+
+extension ReturnsDoc {
+    static func parser() -> AnyParser<Substring, ReturnsDoc> {
+        Parse {
+            blankDocLines
+            DocLine("Returns:")
+            List.parser()
+        }
+        .map(ReturnsDoc.init(items:))
+        .eraseToAnyParser()
+    }
+}
+
+extension NotesDoc {
+    static func parser() -> AnyParser<Substring, NotesDoc> {
+        Parse {
+            blankDocLines
+            DocLine("Notes:")
+            List.parser()
+        }
+        .map(NotesDoc.init(items:))
+        .eraseToAnyParser()
+    }
+}
+
+// MARK: Function
+
+extension FunctionSignature {
+    static func parser() -> AnyParser<Substring, FunctionSignature> {
+        Parse {
+            ItemNameSignature.parser(type: .value)
+            ParameterSignature.listParser()
+            Skip(optionalSpaces)
+            Optionally {
+                "->"
+                Skip(optionalSpaces)
+                ReturnSignature.listParser()
+            }
+            End()
+        }
+        .map { FunctionSignature(name: $0, parameters: $1, returns: $2) }
+        .eraseToAnyParser()
+    }
 }
 
 extension FunctionDoc {
@@ -303,15 +351,17 @@ extension FunctionDoc {
         Parse {
             DocLine(FunctionSignature.parser())
             DocLine("Function")
-            descriptionBlock
-            parametersBlock
-            returnsBlock
-            Optionally { notesBlock }
+            DescriptionDoc.parser()
+            ParametersDoc.parser()
+            ReturnsDoc.parser()
+            Optionally { NotesDoc.parser() }
         }
         .map(FunctionDoc.init)
         .eraseToAnyParser()
     }
 }
+
+// MARK: Method
 
 extension MethodSignature {
     static func parser() -> AnyParser<Substring, MethodSignature> {
@@ -319,14 +369,12 @@ extension MethodSignature {
             ItemNameSignature.parser(type: .method)
             ParameterSignature.listParser()
             Skip(optionalSpaces)
-            OneOf {
-                Parse {
-                    "->"
-                    Skip(optionalSpaces)
-                    ReturnSignature.listParser()
-                }
-                Always([ReturnSignature]())
+            Optionally {
+                "->"
+                Skip(optionalSpaces)
+                ReturnSignature.listParser()
             }
+            End()
         }
         .map(MethodSignature.init)
         .eraseToAnyParser()
@@ -338,15 +386,77 @@ extension MethodDoc {
         Parse {
             DocLine(MethodSignature.parser())
             DocLine("Method")
-            descriptionBlock
-            parametersBlock
-            returnsBlock
-            Optionally { notesBlock }
+            DescriptionDoc.parser()
+            ParametersDoc.parser()
+            ReturnsDoc.parser()
+            Optionally { NotesDoc.parser() }
         }
         .map(MethodDoc.init)
         .eraseToAnyParser()
     }
 }
+
+// MARK: Variable
+
+extension VariableSignature {
+    static func parser() -> AnyParser<Substring, VariableSignature> {
+        Parse {
+            ItemNameSignature.parser(type: .value)
+            Optionally {
+                Skip(oneOrMoreSpaces)
+                Rest().map(VariableType.init)
+            }
+            End()
+        }
+        .map(VariableSignature.init)
+        .eraseToAnyParser()
+    }
+}
+
+extension VariableDoc {
+    static func parser() -> AnyParser<Substring, VariableDoc> {
+        Parse {
+            DocLine(VariableSignature.parser())
+            DocLine("Variable")
+            DescriptionDoc.parser()
+            Optionally { NotesDoc.parser() }
+        }
+        .map(VariableDoc.init)
+        .eraseToAnyParser()
+    }
+}
+
+// MARK: Field
+
+extension FieldSignature {
+    static func parser() -> AnyParser<Substring, FieldSignature> {
+        Parse {
+            ItemNameSignature.parser(type: .value)
+            Optionally {
+                Skip(oneOrMoreSpaces)
+                Rest().map(FieldType.init)
+            }
+            End()
+        }
+        .map(FieldSignature.init)
+        .eraseToAnyParser()
+    }
+}
+
+extension FieldDoc {
+    static func parser() -> AnyParser<Substring, FieldDoc> {
+        Parse {
+            DocLine(FieldSignature.parser())
+            DocLine("Field")
+            DescriptionDoc.parser()
+            Optionally { NotesDoc.parser() }
+        }
+        .map(FieldDoc.init)
+        .eraseToAnyParser()
+    }
+}
+
+// MARK: Module
 
 extension ModuleName {
     static func parser() -> AnyParser<Substring, ModuleName> {
@@ -373,12 +483,7 @@ extension ModuleDoc {
                 Skip(optionalSpaces)
             }
             DocLine("")
-            Many {
-                DocLine {
-                    Rest().map(DescriptionDoc.init)
-                }
-            }
-            
+            DescriptionDoc.parser()
         }
         .map { ModuleDoc(name: $0, description: $1) }
         .eraseToAnyParser()
