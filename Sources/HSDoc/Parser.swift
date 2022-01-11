@@ -292,36 +292,48 @@ extension Parsers {
 
 extension ParametersDoc {
     static func parser() -> AnyParser<Substring, ParametersDoc> {
-        Parse {
+        Parse(ParametersDoc.init(items:)) {
             blankDocLines
             DocLine("Parameters:")
             List.parser()
         }
-        .map(ParametersDoc.init(items:))
         .eraseToAnyParser()
     }
 }
 
 extension ReturnsDoc {
     static func parser() -> AnyParser<Substring, ReturnsDoc> {
-        Parse {
+        Parse(ReturnsDoc.init(items:)) {
             blankDocLines
             DocLine("Returns:")
             List.parser()
         }
-        .map(ReturnsDoc.init(items:))
         .eraseToAnyParser()
     }
 }
 
 extension NotesDoc {
     static func parser() -> AnyParser<Substring, NotesDoc> {
-        Parse {
+        Parse(NotesDoc.init(items:)) {
             blankDocLines
             DocLine("Notes:")
             List.parser()
         }
-        .map(NotesDoc.init(items:))
+        .eraseToAnyParser()
+    }
+}
+
+// MARK: Doc
+
+extension Doc {
+    static func parser() -> AnyParser<Substring, Doc> {
+        OneOf {
+            ModuleDoc.parser().map(Doc.module)
+            FunctionDoc.parser().map(Doc.function)
+            VariableDoc.parser().map(Doc.variable)
+            MethodDoc.parser().map(Doc.method)
+            FieldDoc.parser().map(Doc.field)
+        }
         .eraseToAnyParser()
     }
 }
@@ -330,7 +342,7 @@ extension NotesDoc {
 
 extension FunctionSignature {
     static func parser() -> AnyParser<Substring, FunctionSignature> {
-        Parse {
+        Parse(FunctionSignature.init(name:parameters:returns:)) {
             ItemNameSignature.parser(type: .value)
             ParameterSignature.listParser()
             Skip(optionalSpaces)
@@ -341,14 +353,13 @@ extension FunctionSignature {
             }
             End()
         }
-        .map { FunctionSignature(name: $0, parameters: $1, returns: $2) }
         .eraseToAnyParser()
     }
 }
 
 extension FunctionDoc {
     static func parser() -> AnyParser<Substring, FunctionDoc> {
-        Parse {
+        Parse(FunctionDoc.init) {
             DocLine(FunctionSignature.parser())
             DocLine("Function")
             DescriptionDoc.parser()
@@ -356,7 +367,6 @@ extension FunctionDoc {
             ReturnsDoc.parser()
             Optionally { NotesDoc.parser() }
         }
-        .map(FunctionDoc.init)
         .eraseToAnyParser()
     }
 }
@@ -365,7 +375,7 @@ extension FunctionDoc {
 
 extension MethodSignature {
     static func parser() -> AnyParser<Substring, MethodSignature> {
-        Parse {
+        Parse(MethodSignature.init) {
             ItemNameSignature.parser(type: .method)
             ParameterSignature.listParser()
             Skip(optionalSpaces)
@@ -376,14 +386,13 @@ extension MethodSignature {
             }
             End()
         }
-        .map(MethodSignature.init)
         .eraseToAnyParser()
     }
 }
 
 extension MethodDoc {
     static func parser() -> AnyParser<Substring, MethodDoc> {
-        Parse {
+        Parse(MethodDoc.init) {
             DocLine(MethodSignature.parser())
             DocLine("Method")
             DescriptionDoc.parser()
@@ -391,7 +400,6 @@ extension MethodDoc {
             ReturnsDoc.parser()
             Optionally { NotesDoc.parser() }
         }
-        .map(MethodDoc.init)
         .eraseToAnyParser()
     }
 }
@@ -400,28 +408,27 @@ extension MethodDoc {
 
 extension VariableSignature {
     static func parser() -> AnyParser<Substring, VariableSignature> {
-        Parse {
+        Parse(VariableSignature.init) {
             ItemNameSignature.parser(type: .value)
             Optionally {
                 Skip(oneOrMoreSpaces)
-                Rest().map(VariableType.init)
+                Prefix(1...).map(VariableType.init)
             }
+            Skip(optionalSpaces)
             End()
         }
-        .map(VariableSignature.init)
         .eraseToAnyParser()
     }
 }
 
 extension VariableDoc {
     static func parser() -> AnyParser<Substring, VariableDoc> {
-        Parse {
+        Parse(VariableDoc.init) {
             DocLine(VariableSignature.parser())
             DocLine("Variable")
             DescriptionDoc.parser()
             Optionally { NotesDoc.parser() }
         }
-        .map(VariableDoc.init)
         .eraseToAnyParser()
     }
 }
@@ -430,7 +437,7 @@ extension VariableDoc {
 
 extension FieldSignature {
     static func parser() -> AnyParser<Substring, FieldSignature> {
-        Parse {
+        Parse(FieldSignature.init) {
             ItemNameSignature.parser(type: .value)
             Optionally {
                 Skip(oneOrMoreSpaces)
@@ -438,20 +445,33 @@ extension FieldSignature {
             }
             End()
         }
-        .map(FieldSignature.init)
         .eraseToAnyParser()
     }
 }
 
 extension FieldDoc {
     static func parser() -> AnyParser<Substring, FieldDoc> {
-        Parse {
+        Parse(FieldDoc.init) {
             DocLine(FieldSignature.parser())
             DocLine("Field")
             DescriptionDoc.parser()
             Optionally { NotesDoc.parser() }
         }
-        .map(FieldDoc.init)
+        .eraseToAnyParser()
+    }
+}
+
+// MARK: UnparsedDoc {
+extension UnparsedDoc {
+    static func parse() -> AnyParser<Substring, UnparsedDoc> {
+        Many(atLeast: 1) {
+            DocLine {
+                Prefix(1) { $0 != "/" }
+                Rest()
+            }
+            .map { "\($0)\($1)" }
+        }
+        .map { UnparsedDoc(lines: .init($0)!) }
         .eraseToAnyParser()
     }
 }
@@ -475,7 +495,7 @@ extension ModuleName {
 
 extension ModuleDoc {
     static func parser() -> AnyParser<Substring, ModuleDoc> {
-        Parse {
+        Parse(ModuleDoc.init(name:description:)) {
             DocLine {
                 "=== "
                 ModuleName.parser()
@@ -485,7 +505,6 @@ extension ModuleDoc {
             DocLine("")
             DescriptionDoc.parser()
         }
-        .map { ModuleDoc(name: $0, description: $1) }
         .eraseToAnyParser()
     }
 }

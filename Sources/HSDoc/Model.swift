@@ -26,6 +26,7 @@ struct Identifier: Hashable {
 }
 
 extension Identifier: CustomStringConvertible {
+    /// The identifier's value.
     var description: String { value }
 }
 
@@ -87,14 +88,16 @@ struct ItemNameSignature: Equatable {
 }
 
 extension ItemNameSignature: CustomStringConvertible {
+    /// Compact `String` description of the `ItemNameSignature`.
     var description: String {
         "\(module)\(type)\(name)"
     }
 }
 
 extension ItemNameSignature: CustomDebugStringConvertible {
+    /// Verbose `String` description of the `ItemNameSignature`.
     var debugDescription: String {
-        "<\(description)>"
+        "<ItemNameSignature:\(description)>"
     }
 }
 
@@ -106,6 +109,11 @@ struct ParameterSignature: Equatable {
     /// If true, the argument is optional.
     let isOptional: Bool
     
+    /// Constructs a new `ParameterSignature` with the specified name and optional flag.
+    ///
+    /// - Parameters:
+    ///   - name: The name of the argument.
+    ///   - isOptional: If `true`, the argument is optional.
     init(name: Identifier, isOptional: Bool = false) {
         self.name = name
         self.isOptional = isOptional
@@ -126,16 +134,21 @@ extension ParameterSignature: CustomStringConvertible {
 struct ReturnSignature: Equatable {
     let value: String
     
+    /// Constructs a new `ReturnSignature` with the specified value.
+    ///
+    /// - Parameter value: The return value.
     init(_ value: String) {
         self.value = value
     }
 }
 
 extension ReturnSignature: CustomStringConvertible {
+    /// Compact `String` description of the `ReturnSignature`.
     var description: String { value }
 }
 
 extension ReturnSignature: ExpressibleByStringLiteral {
+    /// Allows the `ReturnSignature` to be initialized with a string literal.
     init(stringLiteral: String) {
         self.value = stringLiteral
     }
@@ -147,12 +160,21 @@ extension ReturnSignature: ExpressibleByStringLiteral {
 struct ListItem: Equatable {
     typealias Lines = NonEmpty<[String]>
     
+    /// The contents of the list item.
     let lines: Lines
     
+    /// Constructs a new `ListItem` with the specified lines.
+    ///
+    /// - Parameter lines: The lines of the list item.
     init(lines: Lines) {
         self.lines = lines
     }
     
+    /// Constructs a new `ListItem` with the specified lines.
+    ///
+    /// - Parameters:
+    ///   - head: The first line.
+    ///   - tail: Additional lines.
     init(_ head: String, _ tail: String...) {
         var lines = Lines(head)
         lines.append(contentsOf: tail)
@@ -179,9 +201,13 @@ struct DescriptionDoc: Equatable {
     }
 }
 
+/// Describes the parameters of a function or method.
 struct ParametersDoc: Equatable {
     let items: List
     
+    /// Constructs a new `ParametersDoc` with the specified list of `ListItem`s.
+    ///
+    /// - Parameter items: The list of `ListItem`s describing the parameters.
     init(items: List) {
         self.items = items
     }
@@ -193,13 +219,24 @@ struct ParametersDoc: Equatable {
     }
 }
 
+/// Describes the return values of a function or method.
 struct ReturnsDoc: Equatable {
+
+    /// The list of `ListItem`s describing the return values.
     let items: List
     
+    /// Constructs a new `ReturnsDoc` with the specified list of `ListItem`s.
+    ///
+    /// - Parameter items: The list of `ListItem`s describing the return values.
     init(items: List) {
         self.items = items
     }
     
+    /// Constructs a new `ReturnsDoc` with the specified list of `ListItem`s.
+    ///
+    /// - Parameters:
+    ///   - head: The first `ListItem`.
+    ///   - tail: Additional `ListItem`s.
     init(_ head: ListItem, _ tail: ListItem...) {
         var items = List(head)
         items.append(contentsOf: tail)
@@ -222,14 +259,36 @@ struct NotesDoc: Equatable {
     }
 }
 
+// MARK: Doc
+
+/// Defines the options for documentation segments.
+enum Doc : Equatable {
+    case module(ModuleDoc)
+    case function(FunctionDoc)
+    case variable(VariableDoc)
+    case method(MethodDoc)
+    case field(FieldDoc)
+}
+
 // MARK: Function
 
 /// Defines the signature for a function.
 struct FunctionSignature : Equatable {
+    /// The module and name of the function.
     let name: ItemNameSignature
+
+    /// The parameters of the function.
     let parameters: [ParameterSignature]
+
+    /// The return value(s) of the function.
     let returns: [ReturnSignature]?
     
+    /// Constructs a new `FunctionSignature` with the specified name, parameters, and return values.
+    ///
+    /// - Parameters:
+    ///   - name: The name of the function.
+    ///   - parameters: The parameters of the function.
+    ///   - returns: The return values of the function.
     init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
         self.name = name
         self.parameters = parameters
@@ -249,12 +308,29 @@ extension FunctionSignature: CustomStringConvertible {
 
 /// Defines the documentation for a function.
 struct FunctionDoc: Equatable {
+    /// The signature of the function.
     let signature: FunctionSignature
+
+    /// The description of the function.
     let description: DescriptionDoc
+
+    /// The parameters of the function.
     let parameters: ParametersDoc
+
+    /// The return values of the function.
     let returns: ReturnsDoc
+
+    /// The notes for the function.
     let notes: NotesDoc?
     
+    /// Constructs a new `FunctionDoc` with the specified signature, description, parameters, return values, and notes.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature of the function.
+    ///   - description: The description of the function.
+    ///   - parameters: The parameters of the function.
+    ///   - returns: The return values of the function.
+    ///   - notes: The notes for the function.
     init(
         signature: FunctionSignature,
         description: DescriptionDoc,
@@ -297,12 +373,29 @@ extension MethodSignature: CustomStringConvertible {
 
 /// Defines the documentation for a function.
 struct MethodDoc: Equatable {
+    /// The signature of the method.
     let signature: MethodSignature
+
+    /// The description of the method.
     let description: DescriptionDoc
+
+    /// The parameters of the method.
     let parameters: ParametersDoc
+
+    /// The return values of the method.
     let returns: ReturnsDoc
+
+    /// The notes for the method.
     let notes: NotesDoc?
     
+    /// Constructs a new `MethodDoc` with the specified signature, description, parameters, return values, and notes.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature of the method.
+    ///   - description: The description of the method.
+    ///   - parameters: The parameters of the method.
+    ///   - returns: The return values of the method.
+    ///   - notes: The notes for the method.
     init(
         signature: MethodSignature,
         description: DescriptionDoc,
@@ -322,12 +415,17 @@ struct MethodDoc: Equatable {
 
 typealias VariableType = String
 
+/// Defines the signature for a variable.
 struct VariableSignature: Equatable {
+    /// The name of the variable.
     let name: ItemNameSignature
+
+    /// The optional type of the variable.
     let type: VariableType?
 }
 
 extension VariableSignature: CustomStringConvertible {
+    /// The variable signature as a string.
     var description: String {
         if let type = type {
             return "\(name) \(type)"
@@ -337,11 +435,23 @@ extension VariableSignature: CustomStringConvertible {
     }
 }
 
+/// Defines the documentation for a variable.
 struct VariableDoc: Equatable {
+    /// The signature of the variable.
     let signature: VariableSignature
+
+    /// The description of the variable.
     let description: DescriptionDoc
+
+    /// The notes for the variable.
     let notes: NotesDoc?
     
+    /// Constructs a new `VariableDoc` with the specified signature, description, and notes.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature of the variable.
+    ///   - description: The description of the variable.
+    ///   - notes: The notes for the variable.
     init(
         signature: VariableSignature,
         description: DescriptionDoc,
@@ -357,12 +467,17 @@ struct VariableDoc: Equatable {
 
 typealias FieldType = String
 
+/// Defines the signature for a field.
 struct FieldSignature: Equatable {
+    /// The name of the field.
     let name: ItemNameSignature
+
+    /// The optional type of the field.
     let type: FieldType?
 }
 
 extension FieldSignature: CustomStringConvertible {
+    /// The field signature as a string.
     var description: String {
         if let type = type {
             return "\(name) \(type)"
@@ -372,11 +487,23 @@ extension FieldSignature: CustomStringConvertible {
     }
 }
 
+/// Defines the documentation for a field.
 struct FieldDoc: Equatable {
+    /// The signature of the field.
     let signature: FieldSignature
+
+    /// The description of the field.
     let description: DescriptionDoc
+
+    /// The notes for the field.
     let notes: NotesDoc?
     
+    /// Constructs a new `FieldDoc` with the specified signature, description, and notes.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature of the field.
+    ///   - description: The description of the field.
+    ///   - notes: The notes for the field.
     init(
         signature: FieldSignature,
         description: DescriptionDoc,
@@ -386,6 +513,15 @@ struct FieldDoc: Equatable {
         self.description = description
         self.notes = notes
     }
+}
+
+// MARK: Unparsed
+
+/// Collects any unparsed 'documentation comment' (`///` or `///`) lines to be reported.
+/// Note: This should be checked for last, since it will match any block of lines
+/// starting with the document comment marker.
+struct UnparsedDoc: Equatable {
+    let lines: NonEmpty<[String]>
 }
 
 // MARK: Module
@@ -414,8 +550,12 @@ class Module {
     /// The list of variables defined for the module.
     var variables: [VariableSignature] = []
     
-    init(name: ModuleName, doc: ModuleDoc) {
-        self.name = name
+    /// Constructs a new `Module` with the specified name and documentation.
+    ///
+    /// - Parameters:
+    ///   - doc: The documentation for the module.
+    init(doc: ModuleDoc) {
+        self.name = doc.name
         self.doc = doc
     }
 }

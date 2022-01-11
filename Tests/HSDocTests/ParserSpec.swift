@@ -399,6 +399,53 @@ class ParserSpec: QuickSpec {
                 }
             }
             
+            context("Doc") {
+                let parser = Doc.parser()
+                
+                itParses("simple function", with: parser) {
+                    """
+                    /// foo.bar()
+                    /// Function
+                    /// This is a description.
+                    ///
+                    /// Parameters:
+                    ///  * None
+                    ///
+                    /// Returns:
+                    ///  * Nothing
+                    """
+                } to: {
+                    Doc.function(.init(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value)),
+                        description: .init("This is a description."),
+                        parameters: .init(ListItem("None")),
+                        returns: .init(ListItem("Nothing"))
+                    ))
+                }
+                
+                itParses("simple method", with: parser) {
+                    """
+                    /// foo:bar()
+                    /// Method
+                    /// This is a description.
+                    ///
+                    /// Parameters:
+                    ///  * None
+                    ///
+                    /// Returns:
+                    ///  * Nothing
+                    """
+                } to: {
+                    Doc.method(.init(
+                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .method)),
+                        description: .init("This is a description."),
+                        parameters: .init(ListItem("None")),
+                        returns: .init(ListItem("Nothing"))
+                    ))
+                }
+
+            }
+            
             context("FunctionDoc") {
                 let parser = FunctionDoc.parser()
                 
@@ -506,7 +553,7 @@ class ParserSpec: QuickSpec {
             context("MethodDoc") {
                 let parser = MethodDoc.parser()
                 
-                itParses("simple function", with: parser) {
+                itParses("simple method", with: parser) {
                     """
                     /// foo:bar()
                     /// Method
@@ -584,6 +631,13 @@ class ParserSpec: QuickSpec {
                 } to: {
                     .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table>")
                 }
+                
+                itParses("trailing space", with: parser) {
+                    "foo.bar "
+                } to: {
+                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                }
+
                 
                 itFailsParsing("function", with: parser) {
                     "foo.bar()"
