@@ -39,7 +39,7 @@ extension Identifier: ExpressibleByStringLiteral {
 // MARK: ModuleName
 
 /// A `Module` describes the path of a Hammerspoon module.
-struct ModuleName: Hashable {
+struct ModuleSignature: Hashable {
     /// The path elements of the module.
     let path: NonEmpty<[Identifier]>
     
@@ -60,7 +60,7 @@ struct ModuleName: Hashable {
     }
 }
 
-extension ModuleName: CustomStringConvertible {
+extension ModuleSignature: CustomStringConvertible {
     /// Compact `String` description of the `Module`.
     var description: String {
         path.map { $0.description }.joined(separator: ".")
@@ -245,7 +245,7 @@ typealias Docs = [Doc]
 /// Defines the signature for a function.
 struct FunctionSignature : Equatable {
     /// The optional module for the function.
-    let module: ModuleName?
+    let module: ModuleSignature?
     
     /// The name of the function
     let name: Identifier
@@ -264,7 +264,7 @@ struct FunctionSignature : Equatable {
     ///   - parameters: The parameters of the function.
     ///   - returns: The return values of the function.
     init(
-        module: ModuleName? = nil,
+        module: ModuleSignature? = nil,
         name: Identifier,
         parameters: [ParameterSignature] = [],
         returns: [ReturnSignature]? = nil
@@ -331,13 +331,13 @@ struct FunctionDoc: Equatable {
 
 /// Defines the signature for a function.
 struct MethodSignature : Equatable {
-    let module: ModuleName
+    let module: ModuleSignature
     let name: Identifier
     let parameters: [ParameterSignature]
     let returns: [ReturnSignature]?
     
     init(
-        module: ModuleName,
+        module: ModuleSignature,
         name: Identifier,
         parameters: [ParameterSignature] = [],
         returns: [ReturnSignature]? = nil
@@ -406,7 +406,7 @@ typealias VariableType = String
 /// Defines the signature for a variable.
 struct VariableSignature: Equatable {
     /// The optional module name.
-    let module: ModuleName?
+    let module: ModuleSignature?
     
     /// The name of the variable.
     let name: Identifier
@@ -414,7 +414,7 @@ struct VariableSignature: Equatable {
     /// The optional type of the variable.
     let type: VariableType?
     
-    init(module: ModuleName? = nil, name: Identifier, type: VariableType? = nil) {
+    init(module: ModuleSignature? = nil, name: Identifier, type: VariableType? = nil) {
         self.module = module
         self.name = name
         self.type = type
@@ -469,7 +469,7 @@ typealias FieldType = String
 /// Defines the signature for a field.
 struct FieldSignature: Equatable {
     /// The module name.
-    let module: ModuleName
+    let module: ModuleSignature
     
     /// The name of the field.
     let name: Identifier
@@ -540,13 +540,13 @@ struct UnparsedDoc: Equatable {
 
 /// Defines the documentation for a `Module`.
 struct ModuleDoc: Equatable {
-    let name: ModuleName
+    let name: ModuleSignature
     let description: DescriptionDoc
 }
 
 /// Defines a module of functions/methods/etc.
 class Module {
-    let name: ModuleName
+    let name: ModuleSignature
     
     let doc: ModuleDoc
     

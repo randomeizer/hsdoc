@@ -323,7 +323,7 @@ extension FunctionSignature {
     static func parser() -> AnyParser<Substring, FunctionSignature> {
         Parse(FunctionSignature.init(module:name:parameters:returns:)) {
             Optionally {
-                ModuleName.prefixParser()
+                ModuleSignature.prefixParser()
                 "."
             }
             Identifier.parser()
@@ -360,7 +360,7 @@ extension MethodSignature {
     static func parser() -> AnyParser<Substring, MethodSignature> {
         Parse(MethodSignature.init) {
             Parse {
-                ModuleName.prefixParser()
+                ModuleSignature.prefixParser()
                 ":"
             }
             Identifier.parser()
@@ -397,7 +397,7 @@ extension VariableSignature {
     static func parser() -> AnyParser<Substring, VariableSignature> {
         Parse(VariableSignature.init) {
             Optionally {
-                ModuleName.prefixParser()
+                ModuleSignature.prefixParser()
                 "."
             }
             Identifier.parser()
@@ -429,7 +429,7 @@ extension VariableDoc {
 extension FieldSignature {
     static func parser() -> AnyParser<Substring, FieldSignature> {
         Parse(FieldSignature.init) {
-            ModuleName.prefixParser()
+            ModuleSignature.prefixParser()
             "."
             Identifier.parser()
             Optionally {
@@ -469,8 +469,8 @@ extension UnparsedDoc {
 
 // MARK: Module
 
-extension ModuleName {
-    static func prefixParser() -> AnyParser<Substring, ModuleName> {
+extension ModuleSignature {
+    static func prefixParser() -> AnyParser<Substring, ModuleSignature> {
         Many(atLeast: 1) {
             Identifier.parser()
             Require {
@@ -484,12 +484,12 @@ extension ModuleName {
         }
         .map { path in
             precondition(!path.isEmpty)
-            return ModuleName(NonEmpty<[Identifier]>(path)!)
+            return ModuleSignature(NonEmpty<[Identifier]>(path)!)
         }
         .eraseToAnyParser()
     }
     
-    static func nameParser() -> AnyParser<Substring, ModuleName> {
+    static func nameParser() -> AnyParser<Substring, ModuleSignature> {
         Many(atLeast: 1) {
             Identifier.parser()
         } separator: {
@@ -497,7 +497,7 @@ extension ModuleName {
         }
         .map { path in
             precondition(!path.isEmpty)
-            return ModuleName(NonEmpty<[Identifier]>(path)!)
+            return ModuleSignature(NonEmpty<[Identifier]>(path)!)
         }
         .eraseToAnyParser()
     }
@@ -508,7 +508,7 @@ extension ModuleDoc {
         Parse(ModuleDoc.init(name:description:)) {
             DocLine {
                 "=== "
-                ModuleName.nameParser()
+                ModuleSignature.nameParser()
                 " ==="
                 Skip(optionalSpaces)
             }
