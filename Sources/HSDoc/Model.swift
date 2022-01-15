@@ -36,7 +36,7 @@ extension Identifier: ExpressibleByStringLiteral {
     }
 }
 
-// MARK: ItemNameSignature
+// MARK: ModuleName
 
 /// A `Module` describes the path of a Hammerspoon module.
 struct ModuleName: Hashable {
@@ -64,40 +64,6 @@ extension ModuleName: CustomStringConvertible {
     /// Compact `String` description of the `Module`.
     var description: String {
         path.map { $0.description }.joined(separator: ".")
-    }
-}
-
-/// Represents an item name, such as a function, method, etc.
-struct ItemNameSignature: Equatable {
-    
-    enum `Type`: Character, Equatable, CustomStringConvertible {
-        case value = "."
-        case method = ":"
-        
-        var description: String { String(rawValue) }
-    }
-    
-    /// The `Module`.
-    let module: ModuleName
-    
-    /// The individual item name.
-    let name: Identifier
-    
-    /// If true, it's a method call. If `true`, it uses ":" to connect the module to the item name.
-    let type: Type
-}
-
-extension ItemNameSignature: CustomStringConvertible {
-    /// Compact `String` description of the `ItemNameSignature`.
-    var description: String {
-        "\(module)\(type)\(name)"
-    }
-}
-
-extension ItemNameSignature: CustomDebugStringConvertible {
-    /// Verbose `String` description of the `ItemNameSignature`.
-    var debugDescription: String {
-        "<ItemNameSignature:\(description)>"
     }
 }
 
@@ -262,20 +228,27 @@ struct NotesDoc: Equatable {
 // MARK: Doc
 
 /// Defines the options for documentation segments.
-enum Doc : Equatable {
+enum Doc: Equatable {
     case module(ModuleDoc)
     case function(FunctionDoc)
     case variable(VariableDoc)
     case method(MethodDoc)
     case field(FieldDoc)
+    case unparsed(UnparsedDoc)
 }
+
+/// A collection of ``Doc`` values.
+typealias Docs = [Doc]
 
 // MARK: Function
 
 /// Defines the signature for a function.
 struct FunctionSignature : Equatable {
-    /// The module and name of the function.
-    let name: ItemNameSignature
+    /// The optional module for the function.
+    let module: ModuleName?
+    
+    /// The name of the function
+    let name: Identifier
 
     /// The parameters of the function.
     let parameters: [ParameterSignature]
@@ -286,10 +259,17 @@ struct FunctionSignature : Equatable {
     /// Constructs a new `FunctionSignature` with the specified name, parameters, and return values.
     ///
     /// - Parameters:
+    ///   - module: The optional module of the function.
     ///   - name: The name of the function.
     ///   - parameters: The parameters of the function.
     ///   - returns: The return values of the function.
-    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
+    init(
+        module: ModuleName? = nil,
+        name: Identifier,
+        parameters: [ParameterSignature] = [],
+        returns: [ReturnSignature]? = nil
+    ) {
+        self.module = module
         self.name = name
         self.parameters = parameters
         self.returns = returns
@@ -298,7 +278,8 @@ struct FunctionSignature : Equatable {
 
 extension FunctionSignature: CustomStringConvertible {
     var description: String {
-        let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
+        let moduleDesc = module == nil ? "" : "\(module!)."
+        let main = "\(moduleDesc)\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
         guard let returns = returns else {
             return main
         }
@@ -350,11 +331,18 @@ struct FunctionDoc: Equatable {
 
 /// Defines the signature for a function.
 struct MethodSignature : Equatable {
-    let name: ItemNameSignature
+    let module: ModuleName
+    let name: Identifier
     let parameters: [ParameterSignature]
     let returns: [ReturnSignature]?
     
-    init(name: ItemNameSignature, parameters: [ParameterSignature] = [], returns: [ReturnSignature]? = nil) {
+    init(
+        module: ModuleName,
+        name: Identifier,
+        parameters: [ParameterSignature] = [],
+        returns: [ReturnSignature]? = nil
+    ) {
+        self.module = module
         self.name = name
         self.parameters = parameters
         self.returns = returns
@@ -363,7 +351,7 @@ struct MethodSignature : Equatable {
 
 extension MethodSignature: CustomStringConvertible {
     var description: String {
-        let main = "\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
+        let main = "\(module):\(name)(\(parameters.map {String(describing: $0) } .joined(separator: ", ")))"
         guard let returns = returns else {
             return main
         }
@@ -417,20 +405,31 @@ typealias VariableType = String
 
 /// Defines the signature for a variable.
 struct VariableSignature: Equatable {
+    /// The optional module name.
+    let module: ModuleName?
+    
     /// The name of the variable.
-    let name: ItemNameSignature
+    let name: Identifier
 
     /// The optional type of the variable.
     let type: VariableType?
+    
+    init(module: ModuleName? = nil, name: Identifier, type: VariableType? = nil) {
+        self.module = module
+        self.name = name
+        self.type = type
+    }
 }
 
 extension VariableSignature: CustomStringConvertible {
     /// The variable signature as a string.
     var description: String {
+        let moduleDoc = module == nil ? "" : "\(module!)."
+        
         if let type = type {
-            return "\(name) \(type)"
+            return "\(moduleDoc)\(name) \(type)"
         } else {
-            return "\(name)"
+            return "\(moduleDoc)\(name)"
         }
     }
 }
@@ -469,8 +468,11 @@ typealias FieldType = String
 
 /// Defines the signature for a field.
 struct FieldSignature: Equatable {
+    /// The module name.
+    let module: ModuleName
+    
     /// The name of the field.
-    let name: ItemNameSignature
+    let name: Identifier
 
     /// The optional type of the field.
     let type: FieldType?
@@ -480,9 +482,9 @@ extension FieldSignature: CustomStringConvertible {
     /// The field signature as a string.
     var description: String {
         if let type = type {
-            return "\(name) \(type)"
+            return "\(module).\(name) \(type)"
         } else {
-            return "\(name)"
+            return "\(module).\(name)"
         }
     }
 }
@@ -522,6 +524,16 @@ struct FieldDoc: Equatable {
 /// starting with the document comment marker.
 struct UnparsedDoc: Equatable {
     let lines: NonEmpty<[String]>
+    
+    init(lines: NonEmpty<[String]>) {
+        self.lines = lines
+    }
+    
+    init(_ head: String, _ tail: String...) {
+        var lines = NonEmpty<[String]>(head)
+        lines.append(contentsOf: tail)
+        self.lines = lines
+    }
 }
 
 // MARK: Module

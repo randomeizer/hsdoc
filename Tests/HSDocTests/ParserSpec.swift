@@ -12,47 +12,34 @@ import Parsing
 
 @testable import HSDoc
 
-/// Parses the given input to the expected output with the given parser.
-func itParses<P,Output>(_ label: String, with parser: P, from input: String, to expected: Output?, leaving remainder: String = "", file: FileString = #file, line: UInt = #line)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
-{
-    it("\((expected != nil).succeedsOrFails) parsing \(label)") {
-        var inputSub = input[...]
-        let actual = parser.parse(&inputSub)
-        
-        if expected == nil {
-            expect(file: file, line: line, actual).to(beNil(), description: "to")
-        } else {
-            expect(file: file, line: line, actual).to(equal(expected), description: "to")
-        }
-        
-        expect(file: file, line: line, inputSub).to(equal(remainder[...]), description: "leaving")
-    }
-}
-
-/// Parses the given input to the expected output with the given parser.
-func itParses<P,Output>(_ label: String, with parser: P, file: FileString = #file, line: UInt = #line, from input: () -> String, to expected: () -> Output?, leaving remainder: () -> String = {""})
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
-{
-    itParses(label, with: parser, from: input(), to: expected(), leaving: remainder(), file: file, line: line)
-}
-
-func itFailsParsing<P,Output>(_ label: String, with parser: P, from input: String, file: FileString = #file, line: UInt = #line)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
-{
-    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
-}
-
-func itFailsParsing<P,Output>(_ label: String, with parser: P, file: FileString = #file, line: UInt = #line, from input: () -> String)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
-{
-    let input = input()
-    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
-}
-
 class ParserSpec: QuickSpec {
     override func spec() {
         describe("Parsing") {
+            context("Identifier") {
+                let parser = Identifier.parser()
+                
+                itParses("alphas", with: parser) {
+                    "foo"
+                } to: {
+                    .init("foo")
+                }
+                
+                itParses("underscore", with: parser) {
+                    "_foo"
+                } to: {
+                    .init("_foo")
+                }
+                
+                itParses("alphanumeric", with: parser) {
+                    "abc123"
+                } to: {
+                    .init("abc123")
+                }
+                
+                itFailsParsing("numericalpha", with: parser, from: "123abc")
+
+            }
+            
             context("docPrefix") {
                 given (
                     ("three slashes",       "///",  true,   "",     #line),
@@ -60,7 +47,11 @@ class ParserSpec: QuickSpec {
                     ("three dashes",        "---",  true,   "",     #line),
                     ("three dashes space",  "--- ", true,   "",     #line),
                     ("two dashes",          "--",   false,  "--",   #line),
-                    ("four slashes",        "////", true,   "/",    #line)
+                    ("four dashes",         "----", false,  "----", #line),
+                    ("two slashes",         "//",   false,  "//",   #line),
+                    ("four slashes",        "////", false,  "////", #line),
+                    ("slash dash",          "///-", true,   "-",    #line),
+                    ("dash slash",          "---/", true,   "/",    #line)
                 ) { (label, input, parses, remainder, line: UInt) in
                     
                     it("\(parses.succeedsOrFails) parsing \(label)") {
@@ -77,139 +68,6 @@ class ParserSpec: QuickSpec {
                         expect(line: line, inputSub).to(equal(remainder[...]))
                     }
                 }
-            }
-            
-            context("blankLine") {
-                given(
-                    ("no spaces",       "///\n",    true,   "",     #line),
-                    ("one space",       "/// \n",   true,   "",     #line),
-                    ("multiple spaces", "///    \n", true,  "",     #line),
-                    ("no newline",      "///",      false,  "///",  #line)
-                ) { (label, input, parses, remainder, line: UInt) in
-                    
-                    it("\(parses.succeedsOrFails) parsing \(label)") {
-                        var inputSub = input[...]
-                        switch (blankLine.parse(&inputSub), parses) {
-                        case (.none, true):
-                            fail("expected to parse <\"\(input)\">", line: line)
-                        case (.some, false):
-                            fail("expected not to parse <\"\(input)\">", line: line)
-                        default:
-                            break
-                        }
-                        
-                        expect(line: line, inputSub).to(equal(remainder[...]))
-                    }
-                }
-            }
-            
-            context("ItemNameSignature") {
-                context("any type") {
-                    let parser = ItemNameSignature.parser()
-                    
-                    itParses("single", with: parser) {
-                        "foo.bar"
-                    } to: {
-                        .init(module: .init("foo"), name: "bar", type: .value)
-                    }
-                    
-                    itParses("double", with: parser) {
-                        "foo.boo.bar"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
-                    }
-                    
-                    itParses("function", with: parser) {
-                        "foo.boo.bar(a)"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
-                    } leaving: {
-                        "(a)"
-                    }
-                    
-                    itParses("method", with: parser) {
-                        "foo.boo:bar(a)"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .method)
-                    } leaving: {
-                        "(a)"
-                    }
-                    
-                    itFailsParsing("no module", with: parser) {
-                        "bar"
-                    }
-                    
-                    itFailsParsing("no module func", with: parser) {
-                        "bar(a)"
-                    }
-                }
-                
-                context("value type") {
-                    let parser = ItemNameSignature.parser(type: .value)
-                    
-                    itParses("single", with: parser) {
-                        "foo.bar"
-                    } to: {
-                        .init(module: .init("foo"), name: "bar", type: .value)
-                    }
-                    
-                    itParses("double", with: parser) {
-                        "foo.boo.bar"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
-                    }
-                    
-                    itParses("function", with: parser) {
-                        "foo.boo.bar(a)"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .value)
-                    } leaving: {
-                        "(a)"
-                    }
-                    
-                    itFailsParsing("method", with: parser) {
-                        "foo.boo:bar(a)"
-                    }
-                    
-                    itFailsParsing("no module", with: parser) {
-                        "bar"
-                    }
-                    
-                    itFailsParsing("no module func", with: parser) {
-                        "bar(a)"
-                    }
-                }
-                
-                context("method type") {
-                    let parser = ItemNameSignature.parser(type: .method)
-                    
-                    itFailsParsing("single", with: parser) {
-                        "foo.bar"
-                    }
-                    
-                    itFailsParsing("double", with: parser) {
-                        "foo.boo.bar"
-                    }
-                    
-                    itFailsParsing("function", with: parser) {
-                        "foo.boo.bar(a)"
-                    }
-                    
-                    itParses("method", with: parser) {
-                        "foo.boo:bar(a)"
-                    } to: {
-                        .init(module: .init("foo", "boo"), name: "bar", type: .method)
-                    } leaving: {
-                        "(a)"
-                    }
-                    
-                    itFailsParsing("no module", with: parser) {
-                        "bar"
-                    }
-                    
-                    itFailsParsing("no module func", with: parser) {
-                        "bar(a)"
-                    }                }
             }
             
             context("ParameterSignature") {
@@ -330,7 +188,7 @@ class ParserSpec: QuickSpec {
                     "foo.bar(a, b) -> table, number"
                 } to: {
                     FunctionSignature(
-                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a"), .init(name: "b")],
                         returns: ["table", "number"]
                     )
@@ -340,14 +198,14 @@ class ParserSpec: QuickSpec {
                     "foo.bar([a])"
                 } to: {
                     .init(
-                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a", isOptional: true)]
                     )
                 }
                 
                 it("is described correctly with return values") {
                     let value = FunctionSignature(
-                        name: .init(module: .init("foo"), name: "bar", type: .value),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
                         returns: ["table", "number"]
                     )
@@ -356,7 +214,7 @@ class ParserSpec: QuickSpec {
                 }
                 
                 it("is described correctly with no params or return values") {
-                    let value = FunctionSignature(name: .init(module: .init("foo"), name: "bar", type: .value))
+                    let value = FunctionSignature(module: .init("foo"), name: "bar")
                     
                     expect(value.description).to(equal("foo.bar()"))
                 }
@@ -416,7 +274,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     Doc.function(.init(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value)),
+                        signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
                         parameters: .init(ListItem("None")),
                         returns: .init(ListItem("Nothing"))
@@ -437,7 +295,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     Doc.method(.init(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .method)),
+                        signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
                         parameters: .init(ListItem("None")),
                         returns: .init(ListItem("Nothing"))
@@ -463,7 +321,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     FunctionDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value)),
+                        signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
                         parameters: .init(ListItem("None")),
                         returns: .init(ListItem("Nothing"))
@@ -492,7 +350,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     FunctionDoc(
-                        signature: .init(name: .init(module: .init("foo", "boo"), name: "bar", type: .value),
+                        signature: .init(module: .init("foo", "boo"), name: "bar",
                                          parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
                                          returns: ["number", "boolean"]),
                         description: .init("This is a description","over two lines."),
@@ -516,7 +374,7 @@ class ParserSpec: QuickSpec {
                     "foo:bar(a, b) -> table, number"
                 } to: {
                     .init(
-                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a"), .init(name: "b")],
                         returns: ["table", "number"]
                     )
@@ -526,14 +384,14 @@ class ParserSpec: QuickSpec {
                     "foo:bar([a])"
                 } to: {
                     .init(
-                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a", isOptional: true)]
                     )
                 }
                 
                 it("is described correctly with return values") {
                     let value = MethodSignature(
-                        name: .init(module: .init("foo"), name: "bar", type: .method),
+                        module: .init("foo"), name: "bar",
                         parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
                         returns: ["table", "number"]
                     )
@@ -543,7 +401,7 @@ class ParserSpec: QuickSpec {
                 
                 it("is described correctly with no params or return values") {
                     let value = MethodSignature(
-                        name: .init(module: .init("foo"), name: "bar", type: .method)
+                        module: .init("foo"), name: "bar"
                     )
                     
                     expect(value.description).to(equal("foo:bar()"))
@@ -567,7 +425,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     MethodDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .method)),
+                        signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
                         parameters: .init(ListItem("None")),
                         returns: .init(ListItem("Nothing"))
@@ -596,7 +454,7 @@ class ParserSpec: QuickSpec {
                 } to: {
                     MethodDoc(
                         signature: .init(
-                            name: .init(module: .init("foo", "boo"), name: "bar", type: .method),
+                            module: .init("foo", "boo"), name: "bar",
                             parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
                             returns: ["number", "boolean"]
                         ),
@@ -623,19 +481,19 @@ class ParserSpec: QuickSpec {
                 itParses("simple", with: parser) {
                     "foo.bar"
                 } to: {
-                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                    .init(module: .init("foo"), name: "bar", type: nil)
                 }
                 
                 itParses("typed", with: parser) {
                     "foo.bar <table>"
                 } to: {
-                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table>")
+                    .init(module: .init("foo"), name: "bar", type: "<table>")
                 }
                 
                 itParses("trailing space", with: parser) {
                     "foo.bar "
                 } to: {
-                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                    .init(module: .init("foo"), name: "bar", type: nil)
                 }
 
                 
@@ -660,7 +518,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     VariableDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil),
+                        signature: .init(module: .init("foo"), name: "bar", type: nil),
                         description: .init("Description.")
                     )
                 }
@@ -678,7 +536,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     VariableDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table: number>"),
+                        signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
                         description: .init("Description."),
                         notes: .init(
                             ListItem("One"),
@@ -711,13 +569,13 @@ class ParserSpec: QuickSpec {
                 itParses("simple", with: parser) {
                     "foo.bar"
                 } to: {
-                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil)
+                    .init(module: .init("foo"), name: "bar", type: nil)
                 }
                 
                 itParses("typed", with: parser) {
                     "foo.bar <table>"
                 } to: {
-                    .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table>")
+                    .init(module: .init("foo"), name: "bar", type: "<table>")
                 }
                 
                 itFailsParsing("function", with: parser) {
@@ -741,7 +599,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     FieldDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: nil),
+                        signature: .init(module: .init("foo"), name: "bar", type: nil),
                         description: .init("Description.")
                     )
                 }
@@ -759,7 +617,7 @@ class ParserSpec: QuickSpec {
                     """
                 } to: {
                     FieldDoc(
-                        signature: .init(name: .init(module: .init("foo"), name: "bar", type: .value), type: "<table: number>"),
+                        signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
                         description: .init("Description."),
                         notes: .init(
                             ListItem("One"),
@@ -800,6 +658,46 @@ class ParserSpec: QuickSpec {
                         name: .init("foo", "bar"),
                         description: .init("Description.")
                     )
+                }
+            }
+            
+            context("Not") {
+                let uncommentedLine = Parse {
+                    Not("//")
+                    Prefix { $0 != "\n" }
+                }
+                
+                itParses("uncommented line", with: uncommentedLine) {
+                    "not a comment"
+                } to: {
+                    "not a comment"
+                }
+                
+                itFailsParsing("commented line", with: uncommentedLine, from: "// comment")
+                
+                context("Many") {
+                    let commentedLine = Parse {
+                        "//"
+                        Prefix { $0 != "\n" }
+                    }
+                    let parser = Many {
+                        OneOf {
+                            commentedLine
+                            uncommentedLine
+                        }
+                    } separator: {
+                        "\n"
+                    }
+                    
+                    itParses("lines", with: parser) {
+                        """
+                        uncommented
+                        // commented
+                        also uncommented
+                        """
+                    } to: {
+                        ["uncommented", " commented", "also uncommented"]
+                    }
                 }
             }
         }

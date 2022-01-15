@@ -8,6 +8,7 @@
 import Foundation
 import NonEmpty
 import Parsing
+import ParsingAsync
 
 /// Checks if the provided `Character` is a legal identifier value, according to Lua:
 ///
@@ -25,12 +26,9 @@ let optionalSpace = Prefix(minLength: 0, maxLength: 1, while: { $0 == " " })
 let optionalSpaces = Prefix(minLength: 0, while: { $0 == " " })
 let oneOrMoreSpaces = Prefix(minLength: 1, while: { $0 == " " })
 
-// Parses a doc-prefixed blank line, terminating with a newline character.
-let blankLine = Skip {
-    docPrefix
-    optionalSpaces
-    "\n"
-}
+// Parsers for newlines
+let optionalNewline = Prefix(minLength: 0, maxLength: 1, while: {$0 == "\n" })
+let nonNewlineCharacters = Prefix { $0 != "\n" }
 
 let itemPathSeparator: Character = "."
 let methodPathSeparator: Character = ":"
@@ -45,67 +43,11 @@ extension Identifier {
     /// Parses a `Substring` to an `Identifier`
     /// - Returns: the parser
     static func parser() -> AnyParser<Substring, Identifier> {
-        Parse {
-            Prefix(1) { $0.isLetter || $0 == "_" }
-            Prefix(while: isIdentifier(_:))
-        }.map { Identifier("\($0)\($1)") }
-        .eraseToAnyParser()
-    }
-}
-
-// Parsers to convert a "foo.bar" or "foo:bar" `Substring` into a `ModuleItemName`.
-
-// Parses "foo.bar" (non-method) item names.
-extension ItemNameSignature {
-    /// Creates a `Parser` for the specified type of item name.
-    /// - Parameter itemType: The type of item to parse. If `nil`, accepts any type.
-    /// - Returns: The `Parser`.
-    static func parser(type itemType: ItemNameSignature.`Type`? = nil) -> AnyParser<Substring, ItemNameSignature> {
-        switch itemType {
-        case .value:
-            return Prefix(while: isModulePathValue).pipe(
-                Parse {
-                    Many(atLeast: 1) {
-                        Identifier.parser()
-                        "."
-                    }
-                    Identifier.parser()
-                    End()
-                }.map { (path, name) -> ItemNameSignature in
-                    precondition(!path.isEmpty)
-                    let pathStr = NonEmpty<[Identifier]>(path)!
-                    return ItemNameSignature(module: .init(pathStr), name: name, type: .value)
-                }
-            )
-            .eraseToAnyParser()
-        case .method:
-            return Prefix(while: isModulePathValue).pipe(
-                Parse {
-                    Many {
-                        Identifier.parser()
-                        "."
-                    }
-                    Identifier.parser()
-                    ":"
-                    Identifier.parser()
-                    End()
-                }
-                .map { (ancestors, parent, name) -> ItemNameSignature in
-                    var path = ancestors
-                    path.append(parent)
-                    let pathStr = NonEmpty<[Identifier]>(path)!
-                    let module = ModuleName(pathStr)
-                    return ItemNameSignature(module: module, name: name, type: .method)
-                }
-            )
-            .eraseToAnyParser()
-        case .none:
-            return OneOf {
-                parser(type: .method)
-                parser(type: .value)
-            }
-            .eraseToAnyParser()
+        Parse(Identifier.init(_:)) {
+            Require(Prefix(1) { $0.isLetter || $0 == "_" })
+            Prefix(while: isIdentifier(_:)).map(String.init)
         }
+        .eraseToAnyParser()
     }
 }
 
@@ -141,7 +83,7 @@ extension ParameterSignature {
             Skip(optionalSpaces)
             Many {
                 ParameterSignature.parser()
-            } separatedBy: {
+            } separator: {
                 commaSeparator
             }
             Skip(optionalSpaces)
@@ -167,7 +109,7 @@ extension ReturnSignature {
     static func listParser() -> AnyParser<Substring, [ReturnSignature]> {
         Many {
             Self.parser()
-        } separatedBy: {
+        } separator: {
             commaSeparator
         }
         .eraseToAnyParser()
@@ -177,14 +119,26 @@ extension ReturnSignature {
 // Parses documentation comment prefixes, including a single optional space.
 let docPrefix = Parse {
     OneOf {
-        "///" // ObjC
-        "---" // Lua
+        Parse { // ObjC
+            "///"
+            Not("/")
+        }
+        Parse { // Lua
+            "---"
+            Not("-")
+        }
     }
     Skip(optionalSpace)
 }
 
+/// Parses if the next input is either a `"\n"` or there is no further input.
+let endOfLineOrInput = OneOf {
+    "\n"
+    End()
+}
+
 /// Parses a single 'documentation' comment line, starting with `///` or `---` and ending with a newline
-/// The `Upstream` `Parser` will only be passed the contents of a single line, excluding the header and the newline.
+/// The `Upstream` ``Parser`` will only be passed the contents of a single line, excluding the header and the newline.
 /// It must consume the whole contents of the line, other than trailing whitespace.
 struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Substring {
     let upstream: Upstream
@@ -200,11 +154,8 @@ struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Subst
     func parse(_ input: inout Substring) -> Upstream.Output? {
         Parse {
             docPrefix
-            Prefix { $0 != "\n" }
-            OneOf {
-                "\n"
-                End()
-            }
+            nonNewlineCharacters
+            endOfLineOrInput
         }
         .pipe(Parse {
             upstream
@@ -272,10 +223,9 @@ extension Parsers {
             let subLineParser = Many {
                 DocLine {
                     Skip(String(inset))
-                    Prefix(1) { $0 != "*" }
-                    Rest()
+                    Not("*")
+                    Rest().map(String.init)
                 }
-                .map { "\($0)\($1)" }
             }
             guard let subLines = subLineParser.parse(&inputCopy) else {
                 return nil
@@ -333,6 +283,35 @@ extension Doc {
             VariableDoc.parser().map(Doc.variable)
             MethodDoc.parser().map(Doc.method)
             FieldDoc.parser().map(Doc.field)
+            UnparsedDoc.parser().map(Doc.unparsed)
+        }
+        .eraseToAnyParser()
+    }
+}
+
+/// Describes a single line, not initiated by a ``docPrefix``, terminated by a `"\n"` or the end of the input.
+let nonDocLine = Parse {
+    Not(docPrefix)
+    nonNewlineCharacters
+}
+
+let nonDocLines = Parse {
+    Many {
+        nonDocLine
+    } separator: {
+        "\n"
+    }
+    Skip { optionalNewline }
+}
+
+extension Docs {
+    static func parser() -> AnyParser<Substring, Docs> {
+        Parse {
+            Many {
+                Skip(nonDocLines)
+                Doc.parser()
+            }
+            Skip(nonDocLines)
         }
         .eraseToAnyParser()
     }
@@ -342,8 +321,12 @@ extension Doc {
 
 extension FunctionSignature {
     static func parser() -> AnyParser<Substring, FunctionSignature> {
-        Parse(FunctionSignature.init(name:parameters:returns:)) {
-            ItemNameSignature.parser(type: .value)
+        Parse(FunctionSignature.init(module:name:parameters:returns:)) {
+            Optionally {
+                ModuleName.prefixParser()
+                "."
+            }
+            Identifier.parser()
             ParameterSignature.listParser()
             Skip(optionalSpaces)
             Optionally {
@@ -376,7 +359,11 @@ extension FunctionDoc {
 extension MethodSignature {
     static func parser() -> AnyParser<Substring, MethodSignature> {
         Parse(MethodSignature.init) {
-            ItemNameSignature.parser(type: .method)
+            Parse {
+                ModuleName.prefixParser()
+                ":"
+            }
+            Identifier.parser()
             ParameterSignature.listParser()
             Skip(optionalSpaces)
             Optionally {
@@ -409,7 +396,11 @@ extension MethodDoc {
 extension VariableSignature {
     static func parser() -> AnyParser<Substring, VariableSignature> {
         Parse(VariableSignature.init) {
-            ItemNameSignature.parser(type: .value)
+            Optionally {
+                ModuleName.prefixParser()
+                "."
+            }
+            Identifier.parser()
             Optionally {
                 Skip(oneOrMoreSpaces)
                 Prefix(1...).map(VariableType.init)
@@ -438,7 +429,9 @@ extension VariableDoc {
 extension FieldSignature {
     static func parser() -> AnyParser<Substring, FieldSignature> {
         Parse(FieldSignature.init) {
-            ItemNameSignature.parser(type: .value)
+            ModuleName.prefixParser()
+            "."
+            Identifier.parser()
             Optionally {
                 Skip(oneOrMoreSpaces)
                 Rest().map(FieldType.init)
@@ -463,13 +456,11 @@ extension FieldDoc {
 
 // MARK: UnparsedDoc {
 extension UnparsedDoc {
-    static func parse() -> AnyParser<Substring, UnparsedDoc> {
+    static func parser() -> AnyParser<Substring, UnparsedDoc> {
         Many(atLeast: 1) {
             DocLine {
-                Prefix(1) { $0 != "/" }
-                Rest()
+                Rest().map(String.init)
             }
-            .map { "\($0)\($1)" }
         }
         .map { UnparsedDoc(lines: .init($0)!) }
         .eraseToAnyParser()
@@ -479,10 +470,29 @@ extension UnparsedDoc {
 // MARK: Module
 
 extension ModuleName {
-    static func parser() -> AnyParser<Substring, ModuleName> {
+    static func prefixParser() -> AnyParser<Substring, ModuleName> {
         Many(atLeast: 1) {
             Identifier.parser()
-        } separatedBy: {
+            Require {
+                OneOf {
+                    "."
+                    ":"
+                }
+            }
+        } separator: {
+            "."
+        }
+        .map { path in
+            precondition(!path.isEmpty)
+            return ModuleName(NonEmpty<[Identifier]>(path)!)
+        }
+        .eraseToAnyParser()
+    }
+    
+    static func nameParser() -> AnyParser<Substring, ModuleName> {
+        Many(atLeast: 1) {
+            Identifier.parser()
+        } separator: {
             "."
         }
         .map { path in
@@ -498,7 +508,7 @@ extension ModuleDoc {
         Parse(ModuleDoc.init(name:description:)) {
             DocLine {
                 "=== "
-                ModuleName.parser()
+                ModuleName.nameParser()
                 " ==="
                 Skip(optionalSpaces)
             }
@@ -508,3 +518,102 @@ extension ModuleDoc {
         .eraseToAnyParser()
     }
 }
+
+// MARK: Utility Parsers
+
+/// Parses a `Void` result if the next input does not match the provided `Upstream` ``Parser``,
+/// otherwise returns `nil`, in both cases leaving the input unchanged.
+struct Not<Upstream>: Parser where Upstream: Parser {
+    let upstream: Upstream
+    
+    /// Construct a ``Not`` with the provided `Upstream` ``Parser``.
+    ///
+    /// - Parameter upstream: The ``Parser`` to check.
+    @inlinable
+    init(_ upstream: Upstream) {
+        self.upstream = upstream
+    }
+    
+    /// Construct a ``Not`` with the provided `Upstream` ``ParserBuilder`` closure.
+    ///
+    /// Parameter build: The `Upstream` ``Parser``-returning closure.
+    @inlinable
+    init(@ParserBuilder _ build: () -> Upstream) {
+      self.upstream = build()
+    }
+    
+    @inlinable
+    func parse(_ input: inout Upstream.Input) -> Void? {
+      let original = input
+      if self.upstream.parse(&input) != nil {
+        input = original
+        return nil
+      }
+      return ()
+    }
+}
+
+/// Parses and returns result if the next input matches the provided `Upstream` ``Parser``,
+/// otherwise returns `nil`, in both cases leaving the input unchanged.
+struct Peek<Upstream>: Parser where Upstream: Parser {
+    let upstream: Upstream
+    
+    /// Construct a ``Peek`` with the provided `Upstream` ``Parser``.
+    ///
+    /// - Parameter upstream: The ``Parser`` to check.
+    @inlinable
+    init(_ upstream: Upstream) {
+        self.upstream = upstream
+    }
+    
+    /// Construct a ``Peek`` with the provided `Upstream` ``ParserBuilder`` closure.
+    ///
+    /// Parameter build: The `Upstream` ``Parser``-returning closure.
+    @inlinable
+    init(@ParserBuilder _ build: () -> Upstream) {
+      self.upstream = build()
+    }
+    
+    @inlinable
+    func parse(_ input: inout Upstream.Input) -> Upstream.Output? {
+      let original = input
+      if let result = self.upstream.parse(&input) {
+        input = original
+        return result
+      }
+      return nil
+    }
+}
+
+/// Parses a `Void` result if the next input matches the provided `Upstream` ``Parser``,
+/// otherwise returns `nil`, in both cases leaving the input unchanged.
+struct Require<Upstream>: Parser where Upstream: Parser {
+    let upstream: Upstream
+    
+    /// Construct a ``Peek`` with the provided `Upstream` ``Parser``.
+    ///
+    /// - Parameter upstream: The ``Parser`` to check.
+    @inlinable
+    init(_ upstream: Upstream) {
+        self.upstream = upstream
+    }
+    
+    /// Construct a ``Peek`` with the provided `Upstream` ``ParserBuilder`` closure.
+    ///
+    /// Parameter build: The `Upstream` ``Parser``-returning closure.
+    @inlinable
+    init(@ParserBuilder _ build: () -> Upstream) {
+      self.upstream = build()
+    }
+    
+    @inlinable
+    func parse(_ input: inout Upstream.Input) -> Void? {
+      let original = input
+      if self.upstream.parse(&input) != nil {
+        input = original
+        return ()
+      }
+      return nil
+    }
+}
+
