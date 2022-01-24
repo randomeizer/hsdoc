@@ -1,5 +1,7 @@
 import Parsing
 
+// NOTE: Not and Peek are being added to the main `Parsing` library in a future release.
+
 /// Parses a `Void` result if the next input does not match the provided `Upstream` ``Parser``,
 /// otherwise returns `nil`, in both cases leaving the input unchanged.
 struct Not<Upstream>: Parser where Upstream: Parser {
