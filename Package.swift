@@ -11,6 +11,9 @@ let package = Package(
         .library(
             name: "HSDoc",
             targets: ["HSDoc"]),
+        .executable(
+            name: "hsdocgen",
+            targets: ["hsdocgen"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-parsing.git", branch: "parser-builder"),
@@ -36,5 +39,9 @@ let package = Package(
                 "HSDoc", "Nimble", "Quick",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
             ]),
+        .executableTarget(name: "hsdocgen",
+                dependencies: [
+                    "HSDoc"
+                ]),
     ]
 )

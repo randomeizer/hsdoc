@@ -213,7 +213,7 @@ class DocsParserSpec: QuickSpec {
                         signature: .init(module: .init("my", "module"), name: "field", type: "<table: string>"),
                         description: .init("A `table` containing `string`s.")
                     )),
-                    .unparsed(.init(
+                    .unrecognised(.init(
                         "my.module.badMethod()",
                         "Method",
                         "Should fail due to missing ':'.",
