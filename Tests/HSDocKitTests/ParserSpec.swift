@@ -146,14 +146,14 @@ class ParserSpec: QuickSpec {
             context("ReturnSignature") {
                 let parser = ReturnSignature.parser()
                 
-                itParses("something", with: parser, from: "foo", to: .init("foo"), leaving: "")
+                itParses("something", with: parser, from: "foo", to: .init("foo"))
                 itFailsParsing("nothing", with: parser, from: "")
                 itFailsParsing("blank line", with: parser, from: "\n")
                 
                 context("list") {
                     let parser = ReturnSignature.listParser()
                     
-                    itParses("nothing", with: parser, from: "", to: [], leaving: "")
+                    itParses("nothing", with: parser, from: "", to: [])
                     
                     itParses("one", with: parser) {
                         "foo"
