@@ -10,7 +10,7 @@ import Nimble
 import NonEmpty
 import Parsing
 
-@testable import HSDoc
+@testable import HSDocKit
 
 class ParserSpec: QuickSpec {
     override func spec() {
