@@ -26,11 +26,12 @@ extension Parsers {
             
             let subLineParser = Many {
                 DocLine {
-                    Skip(String(inset))
-                    Not("*")
+                    Skip { String(inset) }
+                    Not { "*" }
                     Rest().map(String.init)
                 }
             }
+            
             guard let subLines = subLineParser.parse(&inputCopy) else {
                 return nil
             }

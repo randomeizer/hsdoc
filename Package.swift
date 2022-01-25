@@ -16,7 +16,7 @@ let package = Package(
             targets: ["hsdocgen"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-parsing.git", branch: "parser-builder"),
+        .package(url: "https://github.com/pointfreeco/swift-parsing.git", from: "0.5.0"),
 //        .package(url: "https://github.com/randomeizer/swift-parsing-async.git", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-nonempty.git", from: "0.4.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "9.0.0"),

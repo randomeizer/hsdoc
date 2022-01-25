@@ -663,7 +663,7 @@ class ParserSpec: QuickSpec {
             
             context("Not") {
                 let uncommentedLine = Parse {
-                    Not("//")
+                    Not { "//" }
                     Prefix { $0 != "\n" }
                 }
                 

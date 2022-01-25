@@ -33,11 +33,11 @@ let docPrefix = Parse {
     OneOf {
         Parse { // ObjC
             "///"
-            Not("/")
+            Not { "/" }
         }
         Parse { // Lua
             "---"
-            Not("-")
+            Not { "-" }
         }
     }
     Skip(optionalSpace)
@@ -85,7 +85,7 @@ let blankDocLines = Skip(Many(atLeast: 1) { DocLine("") })
 
 /// Describes a single line, not initiated by a ``docPrefix``, terminated by a `"\n"` or the end of the input.
 let nonDocLine = Parse {
-    Not(docPrefix)
+    Not { docPrefix }
     nonNewlineCharacters
 }
 
