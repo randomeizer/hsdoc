@@ -1,5 +1,14 @@
 import Parsing
 
+func deprecable<P>(_ match: P) -> OneOf<Parsers.OneOf2<Parsers.Map<P, Bool>, Parsers.Map<String, Bool>>>
+where P: Parser, P.Input == Substring
+{
+    OneOf {
+        match.map { _ in false }
+        "Deprecated".map { true }
+    }
+}
+
 extension Doc {
     /// Parses a ``Doc`` from a ``Substring``
     /// - Returns: The ``Parser``
@@ -32,7 +41,7 @@ extension Doc {
     static func functionParser() -> AnyParser<TextDocument, Doc> {
         Parse(Doc.function) {
             DocLine(FunctionSignature.parser())
-            DocLine("Function")
+            DocLine(deprecable("Function"))
             DescriptionDoc.parser()
             ParametersDoc.parser()
             ReturnsDoc.parser()
@@ -44,7 +53,7 @@ extension Doc {
     static func variableParser() -> AnyParser<TextDocument, Doc> {
         Parse(Doc.variable) {
             DocLine(VariableSignature.parser())
-            DocLine("Variable")
+            DocLine(deprecable("Variable"))
             DescriptionDoc.parser()
             Optionally { NotesDoc.parser() }
         }
@@ -54,7 +63,7 @@ extension Doc {
     static func methodParser() -> AnyParser<TextDocument, Doc> {
         Parse(Doc.method) {
             DocLine(MethodSignature.parser())
-            DocLine("Method")
+            DocLine(deprecable("Method"))
             DescriptionDoc.parser()
             ParametersDoc.parser()
             ReturnsDoc.parser()
@@ -66,7 +75,7 @@ extension Doc {
     static func fieldParser() -> AnyParser<TextDocument, Doc> {
         Parse(Doc.field) {
             DocLine(FieldSignature.parser())
-            DocLine("Field")
+            DocLine(deprecable("Field"))
             DescriptionDoc.parser()
             Optionally { NotesDoc.parser() }
         }

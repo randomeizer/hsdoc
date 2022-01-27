@@ -7,6 +7,7 @@ public enum Doc: Equatable {
     
     case function(
         signature: FunctionSignature,
+        deprecated: Bool = false,
         description: DescriptionDoc,
         parameters: ParametersDoc,
         returns: ReturnsDoc,
@@ -15,12 +16,14 @@ public enum Doc: Equatable {
     
     case variable(
         signature: VariableSignature,
+        deprecated: Bool = false,
         description: DescriptionDoc,
         notes: NotesDoc? = nil
     )
     
     case method(
         signature: MethodSignature,
+        deprecated: Bool = false,
         description: DescriptionDoc,
         parameters: ParametersDoc,
         returns: ReturnsDoc,
@@ -29,6 +32,7 @@ public enum Doc: Equatable {
     
     case field(
         signature: FieldSignature,
+        deprecated: Bool = false,
         description: DescriptionDoc,
         notes: NotesDoc? = nil
     )
