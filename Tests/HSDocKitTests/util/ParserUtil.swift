@@ -9,14 +9,15 @@ import Quick
 import Nimble
 import Parsing
 import CustomDump
+import HSDocKit
 
+// MARK: itParses
 
-/// Parses the given input to the expected output with the given parser.
-func itParses<P,Output>(_ label: String, with parser: P, from input: String, to expected: Output?, leaving remainder: String = "", file: FileString = #file, line: UInt = #line)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+func itParses<P,Input,Output>(_ label: String, with parser: P, from input: Input, to expected: Output?, leaving remainder: Input = Input(), file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
 {
     it("\((expected != nil).succeedsOrFails) parsing \(label)") {
-        var inputSub = input[...]
+        var inputSub = input
         let actual = parser.parse(&inputSub)
         
         if expected == nil {
@@ -27,8 +28,21 @@ where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
 //            expect(file: file, line: line, actual).to(equal(expected), description: "to")
         }
         
-        expect(file: file, line: line, inputSub).to(equal(remainder[...]), description: "leaving")
+        expect(file: file, line: line, inputSub).to(equal(remainder), description: "leaving")
     }
+}
+
+func itParses<P,Input,Output>(_ label: String, with parser: P, from input: () -> Input, to expected: () -> Output?, leaving remainder: () -> Input = { Input() }, file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
+{
+    itParses(label, with: parser, from: input(), to: expected(), leaving: remainder(), file: file, line: line)
+}
+
+/// Parses the given input to the expected output with the given parser.
+func itParses<P,Output>(_ label: String, with parser: P, from input: String, to expected: Output?, leaving remainder: String = "", file: FileString = #file, line: UInt = #line)
+where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+{
+    itParses(label, with: parser, from: input[...], to: expected, leaving: remainder[...], file: file, line: line)
 }
 
 /// Parses the given input to the expected output with the given parser.
@@ -36,6 +50,20 @@ func itParses<P,Output>(_ label: String, with parser: P, file: FileString = #fil
 where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
 {
     itParses(label, with: parser, from: input(), to: expected(), leaving: remainder(), file: file, line: line)
+}
+
+// MARK: ifFailsParsing
+
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: Input, file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
+{
+    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
+}
+
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: () -> Input, file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
+{
+    itParses(label, with: parser, from: input, to: { nil }, leaving: input, file: file, line: line)
 }
 
 func itFailsParsing<P,Output>(_ label: String, with parser: P, from input: String, file: FileString = #file, line: UInt = #line)

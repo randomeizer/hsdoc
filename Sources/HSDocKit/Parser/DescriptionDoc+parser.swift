@@ -1,7 +1,7 @@
 import Parsing
 
 extension DescriptionDoc {
-    static func parser() -> AnyParser<Substring, DescriptionDoc> {
+    static func parser() -> AnyParser<TextDocument, DescriptionDoc> {
         Many(atLeast: 1) {
             DocLine {
                 optionalSpaces

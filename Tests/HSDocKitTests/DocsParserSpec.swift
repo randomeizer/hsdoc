@@ -13,17 +13,35 @@ import Parsing
 
 class DocsParserSpec: QuickSpec {
     override func spec() {
-        describe("nonDocLines") {
-            itParses("non-doc lines", with: nonDocLines) {
-                """
-                line 1
-                line 2
-                --- line 3
-                """
+        describe("NonDocLines") {
+            let parser = NonDocLines()
+            
+            itParses("two lines", with: parser) {
+                TextDocument {
+                    """
+                    line 1
+                    line 2
+                    --- line 3
+                    """
+                }
             } to: {
-                ["line 1", "line 2"]
+                2
             } leaving: {
-                "--- line 3"
+                TextDocument(firstLine: 3) {
+                    "--- line 3"
+                }
+            }
+            
+            itParses("doc lines", with: parser) {
+                TextDocument {
+                    "--- doc line"
+                }
+            } to: {
+                0
+            } leaving: {
+                TextDocument {
+                    "--- doc line"
+                }
             }
         }
         
@@ -31,80 +49,96 @@ class DocsParserSpec: QuickSpec {
             let parser = Docs.parser()
             
             itParses("single function", with: parser) {
-                """
-                skip this
-                --- my.module.func()
-                --- Function
-                --- Description.
-                ---
-                --- Parameters:
-                ---  * None
-                ---
-                --- Returns:
-                ---  * Nothing
-                """
+                TextDocument {
+                    """
+                    skip this
+                    --- my.module.func()
+                    --- Function
+                    --- Description.
+                    ---
+                    --- Parameters:
+                    ---  * None
+                    ---
+                    --- Returns:
+                    ---  * Nothing
+                    """
+                }
             } to: {
-                [
-                    .function(.init(signature: .init(module: .init("my", "module"), name: "func"),
-                                    description: .init("Description."),
-                                    parameters: .init(.init("None")),
-                                    returns: .init(.init("Nothing")),
-                                    notes: nil))
-                ]
+                [.init(
+                    lineNumber: 2,
+                    doc: .function(
+                        .init(
+                            signature: .init(module: .init("my", "module"), name: "func"),
+                            description: .init("Description."),
+                            parameters: .init(.init("None")),
+                            returns: .init(.init("Nothing")),
+                            notes: nil)
+                    )
+                )]
             }
             
             itParses("single variable", with: parser) {
-                """
-                skip this
-                --- my.module.var
-                --- Variable
-                --- Description.
-                """
+                TextDocument {
+                    """
+                    skip this
+                    --- my.module.var
+                    --- Variable
+                    --- Description.
+                    """
+                }
             } to: {
-                [
-                    .variable(.init(
+                [.init(
+                    lineNumber: 2,
+                    doc: .variable(.init(
                         signature: .init(module: .init("my", "module"), name: "var"),
                         description: .init("Description.")))
-                ]
+                )]
             }
             
             itParses("module and function", with: parser) {
-                """
-                --- === my.module ===
-                ---
-                --- Module description.
+                TextDocument {
+                    """
+                    --- === my.module ===
+                    ---
+                    --- Module description.
 
-                local foo = require("foo")
+                    local foo = require("foo")
 
-                local mod = {}
+                    local mod = {}
 
-                --- my.module.funcWithReturn(a, b) -> boolean
-                --- Function
-                --- Function description.
-                ---
-                --- Parameters:
-                ---  * a - a parameter.
-                ---  * b - another parameter.
-                ---
-                --- Returns:
-                ---  * `true` if some condition is met.
-                other code here
-                """
+                    --- my.module.funcWithReturn(a, b) -> boolean
+                    --- Function
+                    --- Function description.
+                    ---
+                    --- Parameters:
+                    ---  * a - a parameter.
+                    ---  * b - another parameter.
+                    ---
+                    --- Returns:
+                    ---  * `true` if some condition is met.
+                    other code here
+                    """
+                }
             } to: {
                 [
-                    .module(.init(name: .init("my", "module"), description: .init("Module description."))),
-                    .function(.init(
+                    .init(lineNumber: 1, doc: .module(.init(name: .init("my", "module"), description: .init("Module description.")))),
+                    .init(lineNumber: 9, doc: .function(.init(
                         signature: .init(module: .init("my", "module"), name: "funcWithReturn",
                                          parameters: [.init(name: "a"), .init(name: "b")],
                                          returns: [.init("boolean")]),
                         description: .init("Function description."),
                         parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                         returns: .init(.init("`true` if some condition is met.")),
-                        notes: nil)),
+                        notes: nil))),
                 ]
+            } leaving: {
+                TextDocument(firstLine: 19) {
+                    "other code here"
+                }
             }
             
             itParses("clean valid docs", with: parser) {
+                TextDocument {
                 """
                 --- === my.module ===
                 ---
@@ -176,10 +210,13 @@ class DocsParserSpec: QuickSpec {
                 --- Returns:
                 ---  * Nothing
                 """
+                }
             } to: {
                 [
-                    .module(.init(name: .init("my", "module"), description: .init("Module description."))),
-                    .function(.init(
+                    .init(lineNumber: 1, doc: .module(
+                        .init(name: .init("my", "module"), description: .init("Module description."))
+                    )),
+                    .init(lineNumber: 9, doc: .function(.init(
                         signature: .init(
                             module: .init("my", "module"), name: "funcWithReturn",
                             parameters: [.init(name: "a"), .init(name: "b")],
@@ -187,19 +224,19 @@ class DocsParserSpec: QuickSpec {
                         description: .init("Function description."),
                         parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                         returns: .init(.init("`true` if some condition is met.")),
-                        notes: nil)),
-                    .variable(.init(
+                        notes: nil))),
+                    .init(lineNumber: 23, doc: .variable(.init(
                         signature: .init(module: .init("my", "module"), name: "var"),
-                        description: .init("Variable description."))),
-                    .method(.init(
+                        description: .init("Variable description.")))),
+                    .init(lineNumber: 28, doc: .method(.init(
                         signature: .init(
                             module: .init("my", "module"), name: "methodWithoutReturn",
                             parameters: [.init(name: "a"), .init(name: "b", isOptional: true)]),
                         description: .init("Method description."),
                         parameters: .init(.init("a - a parameter."), .init("b - an optional parameter.")),
                         returns: .init(.init("Nothing.")),
-                        notes: nil)),
-                    .method(.init(
+                        notes: nil))),
+                    .init(lineNumber: 41, doc: .method(.init(
                         signature: .init(
                             module: .init("my", "module"), name: "methodWithReturn",
                             parameters: [.init(name: "a")],
@@ -208,12 +245,12 @@ class DocsParserSpec: QuickSpec {
                         description: .init("Method description."),
                         parameters: .init(.init("a - a `string` parameter.")),
                         returns: .init(.init("The same string.")),
-                        notes: nil)),
-                    .field(.init(
+                        notes: nil))),
+                    .init(lineNumber: 54, doc: .field(.init(
                         signature: .init(module: .init("my", "module"), name: "field", type: "<table: string>"),
                         description: .init("A `table` containing `string`s.")
-                    )),
-                    .unrecognised(.init(
+                    ))),
+                    .init(lineNumber: 61, doc: .unrecognised(.init(
                         "my.module.badMethod()",
                         "Method",
                         "Should fail due to missing ':'.",
@@ -223,11 +260,12 @@ class DocsParserSpec: QuickSpec {
                         "",
                         "Returns:",
                         " * Nothing"
-                    ))
+                    )))
                 ]
             }
             
             itParses("global functions and vars", with: parser) {
+                TextDocument {
                 """
                 local randomCodeHere = true
                 
@@ -249,19 +287,24 @@ class DocsParserSpec: QuickSpec {
                 /// A global variable.
                 globalVar = "Hello, world!"
                 """
+                }
             } to: {
                 [
-                    .function(.init(
+                    .init(lineNumber: 3, doc: .function(.init(
                         signature: .init(name: "globalFunction", returns: ["boolean"]),
                         description: .init("A global function."),
                         parameters: .init(.init("None")),
                         returns: .init(.init("`true`"))
-                    )),
-                    .variable(.init(
+                    ))),
+                    .init(lineNumber: 16, doc: .variable(.init(
                         signature: .init(name: "globalVar", type: "<string>"),
                         description: .init("A global variable.")
-                    )),
+                    ))),
                 ]
+            } leaving: {
+                TextDocument(firstLine: 19) {
+                    "globalVar = \"Hello, world!\""
+                }
             }
 
         }

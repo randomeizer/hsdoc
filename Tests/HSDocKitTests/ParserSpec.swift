@@ -223,37 +223,37 @@ class ParserSpec: QuickSpec {
             context("DocLine") {
                 it("parses a Lua comment line") {
                     let parser = DocLine(Rest())
-                    var input = "--- Foo\n"[...]
+                    var input = TextDocument { "--- Foo" }
                     expect(parser.parse(&input)).to(equal("Foo"))
-                    expect(input).to(equal(""[...]))
+                    expect(input).to(haveCount(0))
                 }
                 
                 it("parses a blank Lua comment line") {
                     let parser = DocLine(Rest())
-                    var input = "---\n"[...]
+                    var input = TextDocument { "---\n"  }
                     expect(parser.parse(&input)).to(equal(""))
-                    expect(input).to(equal(""[...]))
+                    expect(input).to(equal(TextDocument(firstLine: 2) { "" }))
                 }
                 
                 it("parses a ObjC comment line") {
                     let parser = DocLine(Rest())
-                    var input = "/// Foo\n"[...]
+                    var input = TextDocument { "/// Foo\n" }
                     expect(parser.parse(&input)).to(equal("Foo"))
-                    expect(input).to(equal(""[...]))
+                    expect(input).to(equal(TextDocument(firstLine: 2) { "" } ))
                 }
                 
                 it("parses when the input ends without a newline") {
                     let parser = DocLine(Rest())
-                    var input = "/// Foo"[...]
+                    var input = TextDocument { "/// Foo" }
                     expect(parser.parse(&input)).to(equal("Foo"))
-                    expect(input).to(equal(""[...]))
+                    expect(input).to(equal(TextDocument()))
                 }
                 
                 it("passes on leading and trailing whitespace") {
                     let parser = DocLine(Rest())
-                    var input = "///   abc  "[...]
+                    var input = TextDocument { "///   abc  " }
                     expect(parser.parse(&input)).to(equal("  abc  "))
-                    expect(input).to(equal(""[...]))
+                    expect(input).to(equal(TextDocument()))
                 }
             }
             
@@ -261,6 +261,7 @@ class ParserSpec: QuickSpec {
                 let parser = Doc.parser()
                 
                 itParses("simple function", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar()
                     /// Function
@@ -272,6 +273,7 @@ class ParserSpec: QuickSpec {
                     /// Returns:
                     ///  * Nothing
                     """
+                    }
                 } to: {
                     Doc.function(.init(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -282,6 +284,7 @@ class ParserSpec: QuickSpec {
                 }
                 
                 itParses("simple method", with: parser) {
+                    TextDocument {
                     """
                     /// foo:bar()
                     /// Method
@@ -293,6 +296,7 @@ class ParserSpec: QuickSpec {
                     /// Returns:
                     ///  * Nothing
                     """
+                    }
                 } to: {
                     Doc.method(.init(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -308,6 +312,7 @@ class ParserSpec: QuickSpec {
                 let parser = FunctionDoc.parser()
                 
                 itParses("simple function", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar()
                     /// Function
@@ -319,6 +324,7 @@ class ParserSpec: QuickSpec {
                     /// Returns:
                     ///  * Nothing
                     """
+                    }
                 } to: {
                     FunctionDoc(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -329,6 +335,7 @@ class ParserSpec: QuickSpec {
                 }
 
                 itParses("full function", with: parser) {
+                    TextDocument {
                     """
                     --- foo.boo.bar(a, [b]) -> number, boolean
                     --- Function
@@ -348,6 +355,7 @@ class ParserSpec: QuickSpec {
                     ---  * a note.
                     ---  * another note.
                     """
+                    }
                 } to: {
                     FunctionDoc(
                         signature: .init(module: .init("foo", "boo"), name: "bar",
@@ -412,6 +420,7 @@ class ParserSpec: QuickSpec {
                 let parser = MethodDoc.parser()
                 
                 itParses("simple method", with: parser) {
+                    TextDocument {
                     """
                     /// foo:bar()
                     /// Method
@@ -423,6 +432,7 @@ class ParserSpec: QuickSpec {
                     /// Returns:
                     ///  * Nothing
                     """
+                    }
                 } to: {
                     MethodDoc(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -433,6 +443,7 @@ class ParserSpec: QuickSpec {
                 }
                 
                 itParses("full method", with: parser) {
+                    TextDocument {
                     """
                     --- foo.boo:bar(a, [b]) -> number, boolean
                     --- Method
@@ -451,6 +462,7 @@ class ParserSpec: QuickSpec {
                     ---  * a note.
                     ---  * another note.
                     """
+                    }
                 } to: {
                     MethodDoc(
                         signature: .init(
@@ -511,11 +523,13 @@ class ParserSpec: QuickSpec {
                 let parser = VariableDoc.parser()
                 
                 itParses("simple", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar
                     /// Variable
                     /// Description.
                     """
+                    }
                 } to: {
                     VariableDoc(
                         signature: .init(module: .init("foo"), name: "bar", type: nil),
@@ -524,6 +538,7 @@ class ParserSpec: QuickSpec {
                 }
                 
                 itParses("full", with: parser) {
+                    TextDocument {
                     """
                     --- foo.bar <table: number>
                     --- Variable
@@ -534,6 +549,7 @@ class ParserSpec: QuickSpec {
                     ---  * Two
                     foo.bar = {}
                     """
+                    }
                 } to: {
                     VariableDoc(
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
@@ -544,22 +560,28 @@ class ParserSpec: QuickSpec {
                         )
                     )
                 } leaving: {
+                    TextDocument(firstLine: 8) {
                     "foo.bar = {}"
+                    }
                 }
                 
                 itFailsParsing("function signature", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar()
                     /// Variable
                     /// Description.
                     """
+                    }
                 }
                 
                 itFailsParsing("missing Variable", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar
                     /// Description.
                     """
+                    }
                 }
             }
             
@@ -592,11 +614,13 @@ class ParserSpec: QuickSpec {
                 let parser = FieldDoc.parser()
                 
                 itParses("simple", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar
                     /// Field
                     /// Description.
                     """
+                    }
                 } to: {
                     FieldDoc(
                         signature: .init(module: .init("foo"), name: "bar", type: nil),
@@ -605,6 +629,7 @@ class ParserSpec: QuickSpec {
                 }
                 
                 itParses("full", with: parser) {
+                    TextDocument {
                     """
                     --- foo.bar <table: number>
                     --- Field
@@ -615,6 +640,7 @@ class ParserSpec: QuickSpec {
                     ---  * Two
                     foo.bar = {}
                     """
+                    }
                 } to: {
                     FieldDoc(
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
@@ -625,22 +651,28 @@ class ParserSpec: QuickSpec {
                         )
                     )
                 } leaving: {
-                    "foo.bar = {}"
+                    TextDocument(firstLine: 8) {
+                        "foo.bar = {}"
+                    }
                 }
                 
                 itFailsParsing("function signature", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar()
                     /// Field
                     /// Description.
                     """
+                    }
                 }
                 
                 itFailsParsing("missing Field", with: parser) {
+                    TextDocument {
                     """
                     /// foo.bar
                     /// Description.
                     """
+                    }
                 }
             }
             
@@ -648,11 +680,13 @@ class ParserSpec: QuickSpec {
                 let parser = ModuleDoc.parser()
                 
                 itParses("module with docs", with: parser) {
+                    TextDocument {
                     """
                     --- === foo.bar ===
                     ---
                     --- Description.
                     """
+                    }
                 } to: {
                     .init(
                         name: .init("foo", "bar"),

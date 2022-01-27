@@ -3,7 +3,7 @@
 extension FunctionDoc {
     /// Parses a ``FunctionDoc`` from a ``Substring``.
     /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<Substring, FunctionDoc> {
+    static func parser() -> AnyParser<TextDocument, FunctionDoc> {
         Parse(FunctionDoc.init) {
             DocLine(FunctionSignature.parser())
             DocLine("Function")

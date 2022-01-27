@@ -12,12 +12,12 @@ let package = Package(
             name: "HSDocKit",
             targets: ["HSDocKit"]),
         .executable(
-            name: "hsdocgen",
-            targets: ["hsdocgen"]),
+            name: "hsdoc",
+            targets: ["hsdoc"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-parsing.git", from: "0.5.0"),
-//        .package(url: "https://github.com/randomeizer/swift-parsing-async.git", branch: "main"),
+        .package(url: "https://github.com/randomeizer/swift-parsing-async.git", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-nonempty.git", from: "0.4.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "9.0.0"),
         .package(url: "https://github.com/Quick/Quick.git", from: "3.0.1"),
@@ -30,7 +30,7 @@ let package = Package(
             name: "HSDocKit",
             dependencies: [
                 .product(name: "Parsing", package: "swift-parsing"),
-//                .product(name: "ParsingAsync", package: "swift-parsing-async"),
+                .product(name: "ParsingAsync", package: "swift-parsing-async"),
                 .product(name: "NonEmpty", package: "swift-nonempty"),
             ]),
         .testTarget(
@@ -39,7 +39,7 @@ let package = Package(
                 "HSDocKit", "Nimble", "Quick",
                 .product(name: "CustomDump", package: "swift-custom-dump"),
             ]),
-        .executableTarget(name: "hsdocgen",
+        .executableTarget(name: "hsdoc",
                 dependencies: [
                     "HSDocKit"
                 ]),

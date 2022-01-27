@@ -4,7 +4,7 @@ extension List {
     
     /// Parses a list of ``ListItem``s.
     /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<Substring, List> {
+    static func parser() -> AnyParser<TextDocument, List> {
         Many(atLeast: 1) {
             ListItem.parser()
         }

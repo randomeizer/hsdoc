@@ -3,7 +3,7 @@ import Parsing
 extension Doc {
     /// Parses a ``Doc`` from a ``Substring``
     /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<Substring, Doc> {
+    static func parser() -> AnyParser<TextDocument, Doc> {
         OneOf {
             ModuleDoc.parser().map(Doc.module)
             FunctionDoc.parser().map(Doc.function)

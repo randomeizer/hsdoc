@@ -3,7 +3,7 @@ import Parsing
 extension FieldDoc {
     /// Parses a ``FieldDoc`` from a ``Substring``.
     /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<Substring, FieldDoc> {
+    static func parser() -> AnyParser<TextDocument, FieldDoc> {
         Parse(FieldDoc.init) {
             DocLine(FieldSignature.parser())
             DocLine("Field")

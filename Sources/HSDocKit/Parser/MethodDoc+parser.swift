@@ -3,7 +3,7 @@ import Parsing
 extension MethodDoc {
     /// Parses a ``MethodDoc`` from a ``Substring``.
     /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<Substring, MethodDoc> {
+    static func parser() -> AnyParser<TextDocument, MethodDoc> {
         Parse(MethodDoc.init) {
             DocLine(MethodSignature.parser())
             DocLine("Method")
