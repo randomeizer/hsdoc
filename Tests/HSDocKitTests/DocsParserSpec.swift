@@ -67,12 +67,11 @@ class DocsParserSpec: QuickSpec {
                 [.init(
                     lineNumber: 2,
                     doc: .function(
-                        .init(
-                            signature: .init(module: .init("my", "module"), name: "func"),
-                            description: .init("Description."),
-                            parameters: .init(.init("None")),
-                            returns: .init(.init("Nothing")),
-                            notes: nil)
+                        signature: .init(module: .init("my", "module"), name: "func"),
+                        description: .init("Description."),
+                        parameters: .init(.init("None")),
+                        returns: .init(.init("Nothing")),
+                        notes: nil
                     )
                 )]
             }
@@ -89,9 +88,9 @@ class DocsParserSpec: QuickSpec {
             } to: {
                 [.init(
                     lineNumber: 2,
-                    doc: .variable(.init(
+                    doc: .variable(
                         signature: .init(module: .init("my", "module"), name: "var"),
-                        description: .init("Description.")))
+                        description: .init("Description."))
                 )]
             }
             
@@ -121,15 +120,17 @@ class DocsParserSpec: QuickSpec {
                 }
             } to: {
                 [
-                    .init(lineNumber: 1, doc: .module(.init(name: .init("my", "module"), description: .init("Module description.")))),
-                    .init(lineNumber: 9, doc: .function(.init(
+                    .init(lineNumber: 1, doc: .module(
+                        name: .init("my", "module"), description: .init("Module description.")
+                    )),
+                    .init(lineNumber: 9, doc: .function(
                         signature: .init(module: .init("my", "module"), name: "funcWithReturn",
                                          parameters: [.init(name: "a"), .init(name: "b")],
                                          returns: [.init("boolean")]),
                         description: .init("Function description."),
                         parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                         returns: .init(.init("`true` if some condition is met.")),
-                        notes: nil))),
+                        notes: nil)),
                 ]
             } leaving: {
                 TextDocument(firstLine: 19) {
@@ -214,9 +215,9 @@ class DocsParserSpec: QuickSpec {
             } to: {
                 [
                     .init(lineNumber: 1, doc: .module(
-                        .init(name: .init("my", "module"), description: .init("Module description."))
+                        name: .init("my", "module"), description: .init("Module description.")
                     )),
-                    .init(lineNumber: 9, doc: .function(.init(
+                    .init(lineNumber: 9, doc: .function(
                         signature: .init(
                             module: .init("my", "module"), name: "funcWithReturn",
                             parameters: [.init(name: "a"), .init(name: "b")],
@@ -224,19 +225,19 @@ class DocsParserSpec: QuickSpec {
                         description: .init("Function description."),
                         parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                         returns: .init(.init("`true` if some condition is met.")),
-                        notes: nil))),
-                    .init(lineNumber: 23, doc: .variable(.init(
+                        notes: nil)),
+                    .init(lineNumber: 23, doc: .variable(
                         signature: .init(module: .init("my", "module"), name: "var"),
-                        description: .init("Variable description.")))),
-                    .init(lineNumber: 28, doc: .method(.init(
+                        description: .init("Variable description."))),
+                    .init(lineNumber: 28, doc: .method(
                         signature: .init(
                             module: .init("my", "module"), name: "methodWithoutReturn",
                             parameters: [.init(name: "a"), .init(name: "b", isOptional: true)]),
                         description: .init("Method description."),
                         parameters: .init(.init("a - a parameter."), .init("b - an optional parameter.")),
                         returns: .init(.init("Nothing.")),
-                        notes: nil))),
-                    .init(lineNumber: 41, doc: .method(.init(
+                        notes: nil)),
+                    .init(lineNumber: 41, doc: .method(
                         signature: .init(
                             module: .init("my", "module"), name: "methodWithReturn",
                             parameters: [.init(name: "a")],
@@ -245,12 +246,12 @@ class DocsParserSpec: QuickSpec {
                         description: .init("Method description."),
                         parameters: .init(.init("a - a `string` parameter.")),
                         returns: .init(.init("The same string.")),
-                        notes: nil))),
-                    .init(lineNumber: 54, doc: .field(.init(
+                        notes: nil)),
+                    .init(lineNumber: 54, doc: .field(
                         signature: .init(module: .init("my", "module"), name: "field", type: "<table: string>"),
                         description: .init("A `table` containing `string`s.")
-                    ))),
-                    .init(lineNumber: 61, doc: .unrecognised(.init(
+                    )),
+                    .init(lineNumber: 61, doc: .unrecognised(lines: .init(
                         "my.module.badMethod()",
                         "Method",
                         "Should fail due to missing ':'.",
@@ -290,16 +291,16 @@ class DocsParserSpec: QuickSpec {
                 }
             } to: {
                 [
-                    .init(lineNumber: 3, doc: .function(.init(
+                    .init(lineNumber: 3, doc: .function(
                         signature: .init(name: "globalFunction", returns: ["boolean"]),
                         description: .init("A global function."),
                         parameters: .init(.init("None")),
                         returns: .init(.init("`true`"))
-                    ))),
-                    .init(lineNumber: 16, doc: .variable(.init(
+                    )),
+                    .init(lineNumber: 16, doc: .variable(
                         signature: .init(name: "globalVar", type: "<string>"),
                         description: .init("A global variable.")
-                    ))),
+                    )),
                 ]
             } leaving: {
                 TextDocument(firstLine: 19) {

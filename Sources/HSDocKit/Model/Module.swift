@@ -5,26 +5,26 @@ public class Module {
     public let name: ModuleSignature
     
     /// The documentation for the ``Module``.
-    public let doc: ModuleDoc
+    public let description: DescriptionDoc
     
     /// The list of fields defined for the module.
-    public var fields: [FieldDoc] = []
+    public var fields: [Doc] = []
     
     /// The list of functions defined for the module.
-    public var functions: [FunctionDoc] = []
+    public var functions: [Doc] = []
     
     /// The list of methods defined for the module.
-    public var methods: [MethodDoc] = []
+    public var methods: [Doc] = []
     
     /// The list of variables defined for the module.
-    public var variables: [VariableSignature] = []
+    public var variables: [Doc] = []
     
     /// Constructs a new `Module` with the specified name and documentation.
     ///
     /// - Parameters:
     ///   - doc: The documentation for the module.
-    public init(doc: ModuleDoc) {
-        self.name = doc.name
-        self.doc = doc
+    public init(name: ModuleSignature, description: DescriptionDoc) {
+        self.name = name
+        self.description = description
     }
 }
