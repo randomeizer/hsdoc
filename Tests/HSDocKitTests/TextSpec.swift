@@ -302,6 +302,55 @@ class TextSpec: QuickSpec {
                     )
 
                 }
+                
+                it("outputs an objc block") {
+                    let value = Doc.function(
+                        signature: .init(
+                            module: .init("foo", "bar"),
+                            name: "one",
+                            parameters: [.init(name: "a"), .init(name: "b", isOptional: true)],
+                            returns: ["string", "boolean"]
+                        ),
+                        deprecated: true,
+                        description: .init("Description that goes", "over two lines."),
+                        parameters: .init(
+                            .init("a - required param"),
+                            .init("b - optional param")
+                        ),
+                        returns: .init(
+                            .init("a string"),
+                            .init("`true` if successful")
+                        ),
+                        notes: .init(
+                            .init("first note"),
+                            .init("second note", "which has second line")
+                        )
+                    )
+                    
+                    XCTAssertNoDifference(
+                        value.text(for: .objc),
+                        """
+                        /// foo.bar.one(a, [b]) -> string, boolean
+                        /// Deprecated
+                        /// Description that goes
+                        /// over two lines.
+                        ///
+                        /// Parameters:
+                        ///  * a - required param
+                        ///  * b - optional param
+                        ///
+                        /// Returns:
+                        ///  * a string
+                        ///  * `true` if successful
+                        ///
+                        /// Notes:
+                        ///  * first note
+                        ///  * second note
+                        ///    which has second line
+                        """
+                    )
+
+                }
             }
         }
     }
