@@ -15,3 +15,9 @@ public struct DescriptionDoc: Equatable {
         self.lines = lines
     }
 }
+
+extension DescriptionDoc {
+    func text(for prefix: Doc.Prefix) -> String {
+        "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
+    }
+}

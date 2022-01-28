@@ -19,3 +19,13 @@ public struct NotesDoc: Equatable {
         self.items = items
     }
 }
+
+extension NotesDoc {
+    func text(for prefix: Doc.Prefix) -> String {
+        """
+        \(prefix)
+        \(prefix) Notes:
+        \(items.text(for: prefix))
+        """
+    }
+}

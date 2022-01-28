@@ -23,3 +23,9 @@ public struct ListItem: Equatable {
         self.lines = lines
     }
 }
+
+extension ListItem {
+    func text(for prefix: Doc.Prefix) -> String {
+        "\(lines.joined(separator: "\n\(prefix)    "))"
+    }
+}

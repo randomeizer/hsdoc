@@ -1,5 +1,14 @@
 /// Defines the options for documentation segments.
 public enum Doc: Equatable {
+    enum Prefix: String, CustomStringConvertible {
+        case lua = "---"
+        case objc = "///"
+        
+        var description: String {
+            rawValue
+        }
+    }
+    
     case module(
         name: ModuleSignature,
         description: DescriptionDoc
@@ -40,4 +49,72 @@ public enum Doc: Equatable {
     case unrecognised(
         lines: Lines
     )
+}
+
+extension Doc: CustomStringConvertible {
+    func text(for prefix: Prefix) -> String {
+        switch self {
+        case let .module(name: name, description: description):
+            return """
+            \(prefix) \(name)
+            \(prefix)
+            \(prefix) \(description)
+            """
+            
+        case let .function(signature: signature, deprecated: deprecated, description: description, parameters: parameters, returns: returns, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Function")
+            \(description.text(for: prefix))
+            \(parameters.text(for: prefix))
+            \(returns.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+            
+        case let .variable(signature: signature, deprecated: deprecated, description: description, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Variable")
+            \(description.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+
+        case let .method(signature: signature, deprecated: deprecated, description: description, parameters: parameters, returns: returns, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Method")
+            \(description.text(for: prefix))
+            \(parameters.text(for: prefix))
+            \(returns.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+            
+        case let .field(signature: signature, deprecated: deprecated, description: description, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Field")
+            \(description.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+
+        case .unrecognised(lines: let lines):
+            return "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
+        }
+    }
+    
+    public var description: String {
+        text(for: .lua)
+    }
 }

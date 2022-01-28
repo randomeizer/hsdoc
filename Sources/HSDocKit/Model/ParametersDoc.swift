@@ -17,3 +17,13 @@ public struct ParametersDoc: Equatable {
         self.items = items
     }
 }
+
+extension ParametersDoc {
+    func text(for prefix: Doc.Prefix) -> String {
+        """
+        \(prefix)
+        \(prefix) Parameters:
+        \(items.text(for: prefix))
+        """
+    }
+}

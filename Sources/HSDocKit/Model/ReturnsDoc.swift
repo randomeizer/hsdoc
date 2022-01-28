@@ -22,3 +22,13 @@ public struct ReturnsDoc: Equatable {
         self.items = items
     }
 }
+
+extension ReturnsDoc {
+    func text(for prefix: Doc.Prefix) -> String {
+        """
+        \(prefix)
+        \(prefix) Returns:
+        \(items.text(for: prefix))
+        """
+    }
+}
