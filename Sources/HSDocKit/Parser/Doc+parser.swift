@@ -83,12 +83,12 @@ extension Doc {
     }
     
     static func unrecognisedParser() -> AnyParser<TextDocument, Doc> {
-        Many(atLeast: 1) {
+        OneOrMore {
             DocLine {
                 Rest().map(String.init)
             }
         }
-        .map { Doc.unrecognised(lines: .init($0)!) }
+        .map(Doc.unrecognised(lines:))
         .eraseToAnyParser()
     }
 }

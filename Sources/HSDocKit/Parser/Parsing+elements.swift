@@ -49,49 +49,10 @@ let endOfLineOrInput = OneOf {
     End()
 }
 
-/// Parses a single 'documentation' comment line, starting with `///` or `---` and ending with a newline
-/// The `Upstream` ``Parser`` will only be passed the contents of a single line, excluding the header and the newline.
-/// It must consume the whole contents of the line, other than trailing whitespace.
-//struct DocLine<Upstream>: Parser where Upstream: Parser, Upstream.Input == Substring {
-//    let upstream: Upstream
-//
-//    init(_ upstream: Upstream) {
-//        self.upstream = upstream
-//    }
-//
-//    init(@ParserBuilder upstream: () -> Upstream) {
-//        self.upstream = upstream()
-//    }
-//
-//    func parse(_ input: inout Substring) -> Upstream.Output? {
-//        Parse {
-//            docPrefix
-//            nonNewlineCharacters
-//            endOfLineOrInput
-//        }
-//        .pipe(Parse {
-//            upstream
-//            Skip(optionalSpaces)
-//            End()
-//        })
-//        .parse(&input)
-//    }
-//}
-
 // Parses at least one blank documentation line ("///")
-let blankDocLines = Skip(Many(atLeast: 1) { DocLine("") })
+let blankDocLines = Skip(OneOrMore { DocLine("") })
 
 // MARK: Doc
-
-//let nonDocLines = Parse {
-//    Many {
-//        nonDocLine
-//    } separator: {
-//        "\n"
-//    }
-//    Skip { optionalNewline }
-//}
-//.map { $0.count }
 
 struct NonDocLine: Parser {
     func parse(_ input: inout TextDocument) -> Void? {
@@ -122,8 +83,3 @@ struct NonDocLines: Parser {
         return count
     }
 }
-
-//let nonDocLines = Many {
-//    NonDocLine()
-//}
-//.map { $0.count }
