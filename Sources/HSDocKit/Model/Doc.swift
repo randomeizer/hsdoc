@@ -23,10 +23,26 @@ public enum Doc: Equatable {
         notes: NotesDoc? = nil
     )
     
+    case constant(
+        signature: ConstantSignature,
+        deprecated: Bool = false,
+        description: DescriptionDoc,
+        notes: NotesDoc? = nil
+    )
+
     case variable(
         signature: VariableSignature,
         deprecated: Bool = false,
         description: DescriptionDoc,
+        notes: NotesDoc? = nil
+    )
+    
+    case constructor(
+        signature: FunctionSignature,
+        deprecated: Bool = false,
+        description: DescriptionDoc,
+        parameters: ParametersDoc,
+        returns: ReturnsDoc,
         notes: NotesDoc? = nil
     )
     
@@ -48,6 +64,12 @@ public enum Doc: Equatable {
     
     case unrecognised(
         lines: Lines
+    )
+    
+    case error(
+        atLine: UInt? = nil,
+        expected: String,
+        actual: [String]?
     )
 }
 
@@ -73,12 +95,36 @@ extension Doc: CustomStringConvertible {
                 result.append("\n\(notes.text(for: prefix))")
             }
             return result
-            
+
+        case let .constant(signature: signature, deprecated: deprecated, description: description, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Constant")
+            \(description.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+
         case let .variable(signature: signature, deprecated: deprecated, description: description, notes: notes):
             var result = """
             \(prefix) \(signature)
             \(prefix) \(deprecated ? "Deprecated" : "Variable")
             \(description.text(for: prefix))
+            """
+            if let notes = notes {
+                result.append("\n\(notes.text(for: prefix))")
+            }
+            return result
+            
+        case let .constructor(signature: signature, deprecated: deprecated, description: description, parameters: parameters, returns: returns, notes: notes):
+            var result = """
+            \(prefix) \(signature)
+            \(prefix) \(deprecated ? "Deprecated" : "Function")
+            \(description.text(for: prefix))
+            \(parameters.text(for: prefix))
+            \(returns.text(for: prefix))
             """
             if let notes = notes {
                 result.append("\n\(notes.text(for: prefix))")
@@ -111,6 +157,12 @@ extension Doc: CustomStringConvertible {
 
         case .unrecognised(lines: let lines):
             return "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
+            
+        case let .error(atLine: line, expected: expected, actual: actual):
+            return """
+            \(prefix) ERROR(line: \(line?.description ?? "?")): Expected \(expected). Actual:
+            \(prefix) \(actual?.joined(separator: "\n\(prefix) ") ?? "")
+            """
         }
     }
     

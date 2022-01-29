@@ -1,5 +1,5 @@
-/// Defines the signature for a variable.
-public struct VariableSignature: Equatable {
+/// Defines the signature for a constant.
+public struct ConstantSignature: Equatable {
     /// The optional module name.
     public let module: ModuleSignature?
     
@@ -16,7 +16,7 @@ public struct VariableSignature: Equatable {
     }
 }
 
-extension VariableSignature: CustomStringConvertible {
+extension ConstantSignature: CustomStringConvertible {
     /// The variable signature as a string.
     public var description: String {
         let moduleDoc = module == nil ? "" : "\(module!)."

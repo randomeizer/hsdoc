@@ -13,6 +13,14 @@ public struct FunctionSignature : Equatable {
     /// The return value(s) of the function.
     public let returns: [ReturnSignature]?
     
+    public var fullName: String {
+        if let module = module {
+            return "\(module).\(name)"
+        } else {
+            return String(describing: name)
+        }
+    }
+    
     /// Constructs a new `FunctionSignature` with the specified name, parameters, and return values.
     ///
     /// - Parameters:
