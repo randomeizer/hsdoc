@@ -11,10 +11,10 @@ extension FunctionSignature {
             }
             Identifier.parser()
             ParameterSignature.listParser()
-            Skip(optionalSpaces)
+            Skip { optionalSpaces }
             Optionally {
                 "->"
-                Skip(optionalSpaces)
+                Skip { optionalSpaces }
                 ReturnSignature.listParser()
             }
             End()

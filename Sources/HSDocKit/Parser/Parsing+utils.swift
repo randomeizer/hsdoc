@@ -6,7 +6,7 @@ import NonEmpty
 /// otherwise returns `nil`, in both cases leaving the input unchanged.
 struct Require<Upstream>: Parser where Upstream: Parser {
     let upstream: Upstream
-    
+
     /// Construct a ``Require`` with the provided `Upstream` ``Parser``.
     ///
     /// - Parameter upstream: The ``Parser`` to check.
@@ -14,74 +14,85 @@ struct Require<Upstream>: Parser where Upstream: Parser {
     init(_ upstream: Upstream) {
         self.upstream = upstream
     }
-    
+
     /// Construct a ``Require`` with the provided `Upstream` ``ParserBuilder`` closure.
     ///
     /// Parameter build: The `Upstream` ``Parser``-returning closure.
     @inlinable
     init(@ParserBuilder _ build: () -> Upstream) {
-      self.upstream = build()
+        self.upstream = build()
     }
-    
+
     @inlinable
-    func parse(_ input: inout Upstream.Input) -> Void? {
-      let original = input
-      if self.upstream.parse(&input) != nil {
-        input = original
+    func parse(_ input: inout Upstream.Input) throws -> Void {
+        let original = input
+        defer { input = original }
+
+        _ = try self.upstream.parse(&input)
+
         return ()
-      }
-      return nil
     }
 }
 
 /// Requires at least one match for the `Upstream` ``Parser``. If found, a ``NonEmpty`` array of the results is the `Output`.
-struct OneOrMore<Upstream, Separator>: Parser
+struct OneOrMore<Upstream, Separator, Terminator>: Parser
 where Upstream: Parser,
       Separator: Parser,
-      Upstream.Input == Separator.Input
+      Terminator: Parser,
+      Upstream.Input == Separator.Input,
+      Terminator.Input == Upstream.Input
 {
     let upstream: Upstream
     let separator: Separator
-    
-    init(_ upstream: Upstream, separator: Separator) {
-        self.upstream = upstream
-        self.separator = separator
-    }
-    
+    let terminator: Terminator
+
     init(
         @ParserBuilder _ build: () -> Upstream,
-        @ParserBuilder separator: () -> Separator
+        @ParserBuilder separator: () -> Separator,
+        @ParserBuilder terminator: () -> Terminator
     ) {
         self.upstream = build()
         self.separator = separator()
+        self.terminator = terminator()
     }
-    
+
     @inlinable
-    func parse(_ input: inout Upstream.Input) -> NonEmpty<[Upstream.Output]>? {
+    func parse(_ input: inout Upstream.Input) throws -> NonEmpty<[Upstream.Output]> {
         let original = input
         var rest = input
         #if DEBUG
-          var previous = input
+            var previous = input
         #endif
 
         var values = [Upstream.Output]()
-        
-        while let parsed = upstream.parse(&input) {
-            #if DEBUG
-              defer { previous = input }
-            #endif
+        var loopError: Error?
 
-            values.append(parsed)
-            rest = input
-            if separator.parse(&input) == nil {
+        while true {
+            let output: Upstream.Output
+            do {
+                output = try upstream.parse(&input)
+            } catch {
+                loopError = error
                 break
             }
             #if DEBUG
-              if memcmp(&input, &previous, MemoryLayout<Upstream.Input>.size) == 0 {
-                var description = ""
-                debugPrint(parsed, terminator: "", to: &description)
-                breakpoint(
-                  """
+                defer { previous = input }
+            #endif
+            values.append(output)
+            rest = input
+            do {
+                _ = try separator.parse(&input)
+            } catch {
+                loopError = error
+                break
+            }
+
+            #if DEBUG
+                if memcmp(&input, &previous, MemoryLayout<Upstream.Input>.size) == 0 {
+                    var description = ""
+                    debugPrint(output, terminator: "", to: &description)
+                    breakpoint(
+                        """
                   ---
                   A "OneOrMore" parser succeeded in parsing a value of "\(Upstream.Output.self)" \
                   (\(description)), but no input was consumed.
@@ -95,30 +106,48 @@ where Upstream: Parser,
                   "Prefix(minLength: 1)"), or introduce a "separator" parser to "OneOrMore".
                   ---
                   """
-                )
-              }
+                    )
+                }
             #endif
         }
-        
-        guard let result = NonEmpty(rawValue: values) else {
-            input = original
-            return nil
-        }
         input = rest
+        do {
+            _ = try self.terminator.parse(&input)
+        } catch {
+            throw loopError ?? error
+        }
+
+        guard let result = NonEmpty(rawValue: values) else {
+            defer { input = original }
+            throw ParsingError.expectedInput("one or more values", at: input)
+        }
         return result
+    }
+}
+
+extension OneOrMore where Separator == Always<Input, Void>, Terminator == Always<Input, Void> {
+    @inlinable
+    init(@ParserBuilder _ builder: () -> Upstream) {
+        self.upstream = builder()
+        self.separator = .init(())
+        self.terminator = .init(())
     }
 }
 
 extension OneOrMore where Separator == Always<Input, Void> {
     @inlinable
-    init(_ upstream: Upstream) {
-        self.upstream = upstream
-        self.separator = .init(())
-    }
-    
-    @inlinable
-    init(@ParserBuilder _ builder: () -> Upstream) {
+    init(@ParserBuilder _ builder: () -> Upstream, terminator: () -> Terminator) {
         self.upstream = builder()
         self.separator = .init(())
+        self.terminator = terminator()
+    }
+}
+
+extension OneOrMore where Terminator == Always<Input, Void> {
+    @inlinable
+    init(@ParserBuilder _ builder: () -> Upstream, separator: () -> Separator) {
+        self.upstream = builder()
+        self.separator = separator()
+        self.terminator = .init(())
     }
 }

@@ -56,15 +56,8 @@ class ParserSpec: QuickSpec {
                     
                     it("\(parses.succeedsOrFails) parsing \(label)") {
                         var inputSub = input[...]
-                        switch (docPrefix.parse(&inputSub), parses) {
-                        case (.none, true):
-                            fail("expected to parse <\"\(input)\">", line: line)
-                        case (.some, false):
-                            fail("expected not to parse <\"\(input)\">", line: line)
-                        default:
-                            break
-                        }
                         
+                        expect{ try docPrefix.parse(&inputSub) }.to(throwError(if: !parses))
                         expect(line: line, inputSub).to(equal(remainder[...]))
                     }
                 }
@@ -224,35 +217,35 @@ class ParserSpec: QuickSpec {
                 it("parses a Lua comment line") {
                     let parser = DocLine(Rest())
                     var input = TextDocument { "--- Foo" }
-                    expect(parser.parse(&input)).to(equal("Foo"))
+                    expect(try parser.parse(&input)).to(equal("Foo"))
                     expect(input).to(haveCount(0))
                 }
                 
                 it("parses a blank Lua comment line") {
                     let parser = DocLine(Rest())
                     var input = TextDocument { "---\n"  }
-                    expect(parser.parse(&input)).to(equal(""))
+                    expect(try parser.parse(&input)).to(equal(""))
                     expect(input).to(equal(TextDocument(firstLine: 2) { "" }))
                 }
                 
                 it("parses a ObjC comment line") {
                     let parser = DocLine(Rest())
                     var input = TextDocument { "/// Foo\n" }
-                    expect(parser.parse(&input)).to(equal("Foo"))
+                    expect(try parser.parse(&input)).to(equal("Foo"))
                     expect(input).to(equal(TextDocument(firstLine: 2) { "" } ))
                 }
                 
                 it("parses when the input ends without a newline") {
                     let parser = DocLine(Rest())
                     var input = TextDocument { "/// Foo" }
-                    expect(parser.parse(&input)).to(equal("Foo"))
+                    expect(try parser.parse(&input)).to(equal("Foo"))
                     expect(input).to(equal(TextDocument()))
                 }
                 
                 it("passes on leading and trailing whitespace") {
                     let parser = DocLine(Rest())
                     var input = TextDocument { "///   abc  " }
-                    expect(parser.parse(&input)).to(equal("  abc  "))
+                    expect(try parser.parse(&input)).to(equal("  abc  "))
                     expect(input).to(equal(TextDocument()))
                 }
             }

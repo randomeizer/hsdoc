@@ -12,7 +12,7 @@ extension Parsers {
     /// Parses a 'list item' line, along with any following lines which are sub-elements of the item, due to indentation.
     struct ListItemParser: Parser
     {
-        func parse(_ input: inout TextDocument) -> ListItem? {
+        func parse(_ input: inout TextDocument) throws -> ListItem {
             var inputCopy = input
             let listItemFirstLine = DocLine {
                 optionalSpaces
@@ -20,9 +20,7 @@ extension Parsers {
                 Rest()
             }
 
-            guard let (inset, body) = listItemFirstLine.parse(&inputCopy) else {
-                return nil
-            }
+            let (inset, body) = try listItemFirstLine.parse(&inputCopy)
             
             let subLineParser = Many {
                 DocLine {
@@ -32,9 +30,7 @@ extension Parsers {
                 }
             }
             
-            guard let subLines = subLineParser.parse(&inputCopy) else {
-                return nil
-            }
+            let subLines = try subLineParser.parse(&inputCopy)
             
             var lines = Lines(String(body))
             lines.append(contentsOf: subLines)

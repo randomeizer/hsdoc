@@ -19,23 +19,18 @@ where Upstream: Parser, Upstream.Input == Substring
     }
     
     @inlinable
-    func parse(_ input: inout TextDocument) -> Upstream.Output? {
+    func parse(_ input: inout TextDocument) throws -> Upstream.Output {
         guard let firstLine = input.first else {
-            return nil
+            throw ParsingError.expectedInput("at least one line required", at: input)
         }
         
         var text = firstLine.text
         
-        guard docPrefix.parse(&text) != nil else {
-            return nil
-        }
-        
-        guard let result = upstream.parse(&text) else {
-            return nil
-        }
+        let _ = try docPrefix.parse(&text)
+        let result = try upstream.parse(&text)
         
         guard text.trimmingCharacters(in: .whitespaces).isEmpty else {
-            return nil
+            throw ParsingError.expectedInput("non-whitespace characters", at: text)
         }
         
         input = input.dropFirst()

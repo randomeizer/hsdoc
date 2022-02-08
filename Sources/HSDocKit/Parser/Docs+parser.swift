@@ -25,20 +25,22 @@ struct DocBlock: Equatable {
 
 extension Parsers {
     struct DocBlockParser: Parser {
-        func parse(_ input: inout TextDocument) -> DocBlock? {
+        func parse(_ input: inout TextDocument) throws -> DocBlock {
             let original = input
-            guard NonDocLines().parse(&input) != nil else {
-                return nil
-            }
+            
+            let _ = try NonDocLines().parse(&input)
             
             guard let firstLineNumber = input.first?.number else {
                 input = original
-                return nil
+                throw ParsingError.expectedInput("a line of text", at: input)
             }
             
-            guard let doc = Doc.parser().parse(&input) else {
+            let doc: Doc
+            do {
+                doc = try Doc.parser().parse(&input)
+            } catch {
                 input = original
-                return nil
+                throw error
             }
             
             return .init(lineNumber: firstLineNumber, doc: doc)

@@ -18,17 +18,19 @@ where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input:
 {
     it("\((expected != nil).succeedsOrFails) parsing \(label)") {
         var inputSub = input
-        let actual = parser.parse(&inputSub)
+        expect(file: file, line: line) {
+            let actual = try parser.parse(&inputSub)
+
+            if expected == nil {
+                expect(file: file, line: line, actual).to(beNil(), description: "to")
+            } else {
+                #warning("Create a Nimble expectation to use customDump")
+                XCTAssertNoDifference(actual, expected, "to", file: file, line: line)
+    //            expect(file: file, line: line, actual).to(equal(expected), description: "to")
+            }
+        }.to(throwError(if: expected == nil))
         
-        if expected == nil {
-            expect(file: file, line: line, actual).to(beNil(), description: "to")
-        } else {
-            #warning("Create a Nimble expectation to use customDump")
-            XCTAssertNoDifference(actual, expected, "to", file: file, line: line)
-//            expect(file: file, line: line, actual).to(equal(expected), description: "to")
-        }
-        
-        expect(file: file, line: line, inputSub).to(equal(remainder), description: "leaving")
+        XCTAssertNoDifference(inputSub, remainder, "remainder mismatch", file: file, line: line)
     }
 }
 

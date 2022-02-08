@@ -31,9 +31,9 @@ extension Doc {
                 "=== "
                 ModuleSignature.nameParser()
                 " ==="
-                Skip(optionalSpaces)
+                Skip { optionalSpaces }
             }
-            DocLine("")
+            DocLine { "" }
             DescriptionDoc.parser()
         }
         .eraseToAnyParser()

@@ -23,9 +23,9 @@ let methodPathSeparator: Character = ":"
 
 // Parses comma separators, allowing for optional spaces either side.
 let commaSeparator = Parse {
-    Skip(optionalSpaces)
+    Skip { optionalSpaces }
     ","
-    Skip(optionalSpaces)
+    Skip { optionalSpaces }
 }
 
 // Parses documentation comment prefixes, including a single optional space.
@@ -40,7 +40,7 @@ let docPrefix = Parse {
             Not { "-" }
         }
     }
-    Skip(optionalSpace)
+    Skip { optionalSpace }
 }
 
 /// Parses if the next input is either a `"\n"` or there is no further input.
@@ -50,21 +50,21 @@ let endOfLineOrInput = OneOf {
 }
 
 // Parses at least one blank documentation line ("///")
-let blankDocLines = Skip(OneOrMore { DocLine("") })
+let blankDocLines = Skip{
+    OneOrMore { DocLine("") }
+}
 
 // MARK: Doc
 
 struct NonDocLine: Parser {
-    func parse(_ input: inout TextDocument) -> Void? {
+    func parse(_ input: inout TextDocument) throws -> Void {
         guard let firstLine = input.first else {
-            return nil
+            throw ParsingError.expectedInput("at least one line", at: input)
         }
         
         var text = firstLine.text
         
-        guard docPrefix.parse(&text) == nil else {
-            return nil
-        }
+        try Not { docPrefix }.parse(&text)
         
         input = input.dropFirst()
         return ()
@@ -72,12 +72,17 @@ struct NonDocLine: Parser {
 }
 
 struct NonDocLines: Parser {
-    func parse(_ input: inout TextDocument) -> UInt? {
+    func parse(_ input: inout TextDocument) -> UInt {
         let nonDocLine = NonDocLine()
         var count: UInt = 0
         
-        while nonDocLine.parse(&input) != nil {
-            count = count + 1
+        while !input.isEmpty {
+            do {
+                try nonDocLine.parse(&input)
+                count = count + 1
+            } catch {
+                break
+            }
         }
         
         return count

@@ -22,14 +22,15 @@ extension ParameterSignature {
     static func listParser() -> AnyParser<Substring, [ParameterSignature]> {
         Parse {
             "("
-            Skip(optionalSpaces)
+            Skip { optionalSpaces }
             Many {
                 ParameterSignature.parser()
             } separator: {
                 commaSeparator
+            } terminator: {
+                Skip { optionalSpaces }
+                ")"
             }
-            Skip(optionalSpaces)
-            ")"
         }
         .eraseToAnyParser()
     }

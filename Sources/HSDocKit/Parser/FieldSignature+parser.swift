@@ -9,7 +9,7 @@ extension FieldSignature {
             "."
             Identifier.parser()
             Optionally {
-                Skip(oneOrMoreSpaces)
+                Skip { oneOrMoreSpaces }
                 Rest().map(FieldType.init)
             }
             End()

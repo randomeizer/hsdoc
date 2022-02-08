@@ -11,10 +11,10 @@ extension VariableSignature {
             }
             Identifier.parser()
             Optionally {
-                Skip(oneOrMoreSpaces)
+                Skip { oneOrMoreSpaces }
                 Prefix(1...).map(VariableType.init)
             }
-            Skip(optionalSpaces)
+            Skip { optionalSpaces }
             End()
         }
         .eraseToAnyParser()
