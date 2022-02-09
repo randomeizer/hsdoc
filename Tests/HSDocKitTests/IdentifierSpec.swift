@@ -26,7 +26,16 @@ class IdentifierSpec: QuickSpec {
                     .init("abc123")
                 }
                 
-                itFailsParsing("numericalpha", with: parser, from: "123abc")
+                itFailsParsing("numericalpha", with: parser) {
+                    "123abc"
+                } withErrorMessage: {
+                    """
+                    error: expected letter or underscore
+                     --> input:1:1
+                    1 | 123abc
+                      | ^
+                    """
+                }
             }
         }
     }

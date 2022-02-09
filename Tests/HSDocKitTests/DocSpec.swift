@@ -1,5 +1,6 @@
 import Quick
 import Nimble
+import CustomDump
 @testable import HSDocKit
 
 class DocSpec: QuickSpec {
@@ -147,6 +148,13 @@ class DocSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } withError: { error in
+                    XCTAssertNoDifference("\(error)",  """
+                      error: unexpected input
+                       --> input:1:12-13
+                      1 | /// foo.bar()
+                        |            ^^ expected end of input
+                      """)
                 }
                 
                 itFailsParsing("missing Variable", with: parser) {
@@ -156,6 +164,9 @@ class DocSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } withErrorMessage: {
+                    #warning("strange error due to not having access to `Parsing.ParsingError`")
+                    return "error: expected Variable or Deprecated"
                 }
             }
             
@@ -284,6 +295,13 @@ class DocSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } withErrorMessage: {
+                    """
+                    error: unexpected input
+                     --> input:1:12-13
+                    1 | /// foo.bar()
+                      |            ^^ expected end of input
+                    """
                 }
                 
                 itFailsParsing("missing Field", with: parser) {
@@ -293,6 +311,9 @@ class DocSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } withErrorMessage: {
+                    #warning("strange error message due to not having access to `Parsing.ParsingError`")
+                    return "error: expected Field or Deprecated"
                 }
             }
 

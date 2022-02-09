@@ -3,7 +3,7 @@ import Parsing
 struct NonDocLine: Parser {
     func parse(_ input: inout TextDocument) throws {
         guard let firstLine = input.first else {
-            throw ParsingError.expectedInput("at least one line", at: input)
+            throw LintError.expected("at least one line")
         }
         
         var text = firstLine.text

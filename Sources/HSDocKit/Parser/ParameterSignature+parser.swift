@@ -4,13 +4,13 @@ import Parsing
 extension ParameterSignature {
     /// A parser that convert a `Substring` into a `ParameterSignature`
     static let parser = OneOf {
-        Identifier.parser
-            .map { ParameterSignature(name: $0, isOptional: false) }
         Parse {
             "["
             Identifier.parser
             "]"
         }.map { ParameterSignature(name: $0, isOptional: true)}
+        Identifier.parser
+            .map { ParameterSignature(name: $0, isOptional: false) }
     }
     
     /// A parser that converts a `Substring` with a bracketted `"(list)"` of parameter names.

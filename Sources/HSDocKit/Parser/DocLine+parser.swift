@@ -3,13 +3,13 @@ import Parsing
 // Parses documentation comment prefixes, including a single optional space.
 let docPrefix = Parse {
     OneOf {
-        Parse { // ObjC
-            "///"
-            Not { "/" }
-        }
         Parse { // Lua
             "---"
             Not { "-" }
+        }
+        Parse { // ObjC
+            "///"
+            Not { "/" }
         }
     }
     Skip { optionalSpace }
@@ -36,16 +36,16 @@ where Upstream: Parser, Upstream.Input == Substring
     @inlinable
     func parse(_ input: inout TextDocument) throws -> Upstream.Output {
         guard let firstLine = input.first else {
-            throw ParsingError.expectedInput("at least one line required", at: input)
+            throw LintError.expected("at least one line required")
         }
         
         var text = firstLine.text
         
-        let _ = try docPrefix.parse(&text)
+        _ = try docPrefix.parse(&text)
         let result = try upstream.parse(&text)
         
         guard text.trimmingCharacters(in: .whitespaces).isEmpty else {
-            throw ParsingError.expectedInput("non-whitespace characters", at: text)
+            throw LintError.expected("non-whitespace characters")
         }
         
         input = input.dropFirst()

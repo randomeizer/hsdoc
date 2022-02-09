@@ -20,7 +20,23 @@ class ParameterSignatureSpec: QuickSpec {
                     .init(name: "foo", isOptional: true)
                 }
                 
-                itFailsParsing("unclosed optional", with: parser) { "[foo" }
+                itFailsParsing("unclosed optional", with: parser) {
+                    "[foo"
+                } withErrorMessage: {
+                    """
+                    error: multiple failures occurred
+                    
+                    error: unexpected input
+                     --> input:1:5
+                    1 | [foo
+                      |     ^ expected "]"
+                    
+                    error: expected letter or underscore
+                     --> input:1:1
+                    1 | [foo
+                      | ^
+                    """
+                }
                 
                 itParses("unopened optional", with: parser) {
                     "foo]"
@@ -36,7 +52,23 @@ class ParameterSignatureSpec: QuickSpec {
                     .init(name: "_foo123", isOptional: false)
                 }
                 
-                itFailsParsing("number", with: parser) { "123_foo" }
+                itFailsParsing("number", with: parser) {
+                    "123_foo"
+                } withErrorMessage: {
+                    """
+                    error: multiple failures occurred
+                    
+                    error: unexpected input
+                     --> input:1:1
+                    1 | 123_foo
+                      | ^ expected "["
+                    
+                    error: expected letter or underscore
+                     --> input:1:1
+                    1 | 123_foo
+                      | ^
+                    """
+                }
                 
                 it("is described correctly") {
                     expect(ParameterSignature(name: "foo", isOptional: false).description).to(equal("foo"))
@@ -74,6 +106,25 @@ class ParameterSignatureSpec: QuickSpec {
                     
                     itFailsParsing("extra comma", with: parser) {
                         "(foo,)"
+                    } withErrorMessage: {
+                        return """
+                        error: multiple failures occurred
+                        
+                        error: unexpected input
+                         --> input:1:6
+                        1 | (foo,)
+                          |      ^ expected "["
+                        
+                        error: expected letter or underscore
+                         --> input:1:6
+                        1 | (foo,)
+                          |      ^
+                        
+                        error: unexpected input
+                         --> input:1:5
+                        1 | (foo,)
+                          |     ^ expected ")"
+                        """
                     }
                 }
             }

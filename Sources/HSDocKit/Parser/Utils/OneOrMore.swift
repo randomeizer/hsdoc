@@ -87,7 +87,7 @@ where Upstream: Parser,
 
         guard let result = NonEmpty(rawValue: values) else {
             defer { input = original }
-            throw ParsingError.expectedInput("one or more values", at: input)
+            throw LintError.expected("one or more values")
         }
         return result
     }

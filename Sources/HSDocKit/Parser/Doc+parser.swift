@@ -1,12 +1,16 @@
 import Parsing
 import Dispatch
 
-func deprecable<P>(_ match: P) -> OneOf<Parsers.OneOf2<Parsers.Map<P, Bool>, Parsers.Map<String, Bool>>>
+func deprecable<P>(_ match: P) -> Require<OneOf<Parsers.OneOf2<Parsers.Map<P, Bool>, Parsers.Map<String, Bool>>>>
 where P: Parser, P.Input == Substring
 {
-    OneOf {
-        match.map { _ in false }
-        "Deprecated".map { true }
+    Require {
+        OneOf {
+            match.map { _ in false }
+            "Deprecated".map { true }
+        }
+    } orThrow: { (_, _) in
+        LintError.expected("\(match) or Deprecated")
     }
 }
 
@@ -24,7 +28,7 @@ extension Doc {
     static let moduleParser = Parse(Doc.module) {
         DocLine {
             "=== "
-            ModuleSignature.nameParser()
+            ModuleSignature.nameParser
             " ==="
             Skip { optionalSpaces }
         }

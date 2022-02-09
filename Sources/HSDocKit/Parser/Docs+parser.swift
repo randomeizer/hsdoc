@@ -5,12 +5,8 @@ typealias Docs = [DocBlock]
 
 extension Docs {
     /// Parses a ``Docs`` value from a ``Substring``
-    /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<TextDocument, Docs> {
-        Many {
-            DocBlock.parser()
-        }
-        .eraseToAnyParser()
+    static let parser = Many {
+        DocBlock.parser()
     }
 }
 
@@ -32,7 +28,7 @@ extension Parsers {
             
             guard let firstLineNumber = input.first?.number else {
                 input = original
-                throw ParsingError.expectedInput("a line of text", at: input)
+                throw LintError.expected("a line of text")
             }
             
             let doc: Doc

@@ -29,10 +29,24 @@ class VariableSignatureSpec: QuickSpec {
                 
                 itFailsParsing("function", with: parser) {
                     "foo.bar()"
+                } withErrorMessage: {
+                    """
+                    error: unexpected input
+                     --> input:1:8
+                    1 | foo.bar()
+                      |        ^ expected end of input
+                    """
                 }
                 
                 itFailsParsing("method", with: parser) {
                     "foo:bar()"
+                } withErrorMessage: {
+                    """
+                    error: unexpected input
+                     --> input:1:4
+                    1 | foo:bar()
+                      |    ^ expected end of input
+                    """
                 }
             }
         }

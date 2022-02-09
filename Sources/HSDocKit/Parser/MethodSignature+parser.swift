@@ -4,7 +4,7 @@ extension MethodSignature {
     /// Parses a ``MethodSignature`` from a ``Substring``.
     static let parser = Parse(MethodSignature.init) {
         Parse {
-            ModuleSignature.prefixParser()
+            ModuleSignature.prefixParser
             ":"
         }
         Identifier.parser
@@ -13,7 +13,7 @@ extension MethodSignature {
         Optionally {
             "->"
             Skip { optionalSpaces }
-            ReturnSignature.listParser()
+            ReturnSignature.listParser
         }
         End()
     }

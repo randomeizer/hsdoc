@@ -14,7 +14,11 @@ func isIdentifier(_ char: Character) -> Bool {
 extension Identifier {
     /// Parses a `Substring` to an `Identifier`
     static let parser = Parse(Identifier.init(_:)) {
-        Check(Prefix(1) { $0.isLetter || $0 == "_" })
+        Check {
+            Prefix(1) { $0.isLetter || $0 == "_" }
+        } orThrow: { (_, _) in
+            LintError.expected("letter or underscore")
+        }
         Prefix(while: isIdentifier(_:)).map(String.init)
     }
 }

@@ -4,7 +4,7 @@ extension FunctionSignature {
     /// Parses a ``FunctionSignature`` from a ``Substring``
     static let parser = Parse(FunctionSignature.init(module:name:parameters:returns:)) {
         Optionally {
-            ModuleSignature.prefixParser()
+            ModuleSignature.prefixParser
             "."
         }
         Identifier.parser
@@ -13,7 +13,7 @@ extension FunctionSignature {
         Optionally {
             "->"
             Skip { optionalSpaces }
-            ReturnSignature.listParser()
+            ReturnSignature.listParser
         }
         End()
     }

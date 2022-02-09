@@ -3,7 +3,7 @@ import Parsing
 extension FieldSignature {
     /// Parses a ``FieldSignature`` from a ``Substring``.
     static let parser = Parse(FieldSignature.init) {
-        ModuleSignature.prefixParser()
+        ModuleSignature.prefixParser
         "."
         Identifier.parser
         Optionally {

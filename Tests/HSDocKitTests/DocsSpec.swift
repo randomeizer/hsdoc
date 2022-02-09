@@ -15,7 +15,7 @@ class DocsSpec: QuickSpec {
     override func spec() {
         describe("Docs") {
             context("parser") {
-                let parser = Docs.parser()
+                let parser = Docs.parser
                 
                 itParses("single function", with: parser) {
                     TextDocument {

@@ -2,23 +2,24 @@ import Parsing
 
 /// Attempts to parse the `upstream` ``Parser``. If it fails, the `or` closure
 /// is called, allowing the error to be handled and transformed into a new ``Error``.
-struct Require<Upstream, Err>: Parser
-where Upstream: Parser,
-      Err: Error
+public struct Require<Upstream>: Parser
+where Upstream: Parser
 {
-    let upstream: Upstream
-    let fail: (inout Upstream.Input, Error) -> Err
+    public let upstream: Upstream
+    public let fail: (Error, inout Upstream.Input) -> Error
     
-    init(@ParserBuilder _ upstream: () -> Upstream, or fail: () -> (inout Upstream.Input, Error) -> Err) {
+    @inlinable
+    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping (Error, inout Upstream.Input) -> Error) {
         self.upstream = upstream()
-        self.fail = fail()
+        self.fail = fail
     }
     
-    func parse(_ input: inout Upstream.Input) throws -> Upstream.Output {
+    @inlinable
+    public func parse(_ input: inout Upstream.Input) throws -> Upstream.Output {
         do {
             return try upstream.parse(&input)
         } catch {
-            throw fail(&input, error)
+            throw fail(error, &input)
         }
     }
 }

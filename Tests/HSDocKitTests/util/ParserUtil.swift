@@ -56,27 +56,37 @@ where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
 
 // MARK: ifFailsParsing
 
-func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: Input, file: FileString = #file, line: UInt = #line)
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: @escaping () -> Input, withError: @escaping (Error) -> Void, leaving remainder: @escaping () -> Input, file: FileString = #file, line: UInt = #line)
 where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
 {
-    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
+    it("fails parsing \(label)") {
+        var inputSub = input()
+        do {
+            let output = try parser.parse(&inputSub)
+            fail("expected to fail but got: \(output)", file: file, line: line)
+        } catch {
+            withError(error)
+        }
+        expect(file: file, line: line, inputSub).to(equal(remainder()), description: "remainder")
+    }
 }
 
-func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: () -> Input, file: FileString = #file, line: UInt = #line)
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: @escaping () -> Input, withError: @escaping (Error) -> Void, file: FileString = #file, line: UInt = #line)
 where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
 {
-    itParses(label, with: parser, from: input, to: { nil }, leaving: input, file: file, line: line)
+    itFailsParsing(label, with: parser, from: input, withError: withError, leaving: input)
 }
 
-func itFailsParsing<P,Output>(_ label: String, with parser: P, from input: String, file: FileString = #file, line: UInt = #line)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: @escaping () -> Input, withErrorMessage: @escaping () -> String, leaving remainder: @escaping () -> Input, file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
 {
-    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
+    itFailsParsing(label, with: parser, from: input, withError: { error in
+        XCTAssertNoDifference("\(error)", withErrorMessage(), file: file, line: line)
+    }, leaving: remainder, file: file, line: line)
 }
 
-func itFailsParsing<P,Output>(_ label: String, with parser: P, file: FileString = #file, line: UInt = #line, from input: () -> String)
-where P: Parser, P.Input == Substring, Output == P.Output, Output: Equatable
+func itFailsParsing<P,Input,Output>(_ label: String, with parser: P, from input: @escaping () -> Input, withErrorMessage: @escaping () -> String, file: FileString = #file, line: UInt = #line)
+where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input: RangeReplaceableCollection, Input: Equatable
 {
-    let input = input()
-    itParses(label, with: parser, from: input, to: nil, leaving: input, file: file, line: line)
+    itFailsParsing(label, with: parser, from: input, withErrorMessage: withErrorMessage, leaving: input, file: file, line: line)
 }
