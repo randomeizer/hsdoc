@@ -8,16 +8,9 @@
 import Parsing
 
 // Parsers for whitespace
-let optionalSpace = Prefix(minLength: 0, maxLength: 1, while: { $0 == " " })
-let optionalSpaces = Prefix(minLength: 0, while: { $0 == " " })
-let oneOrMoreSpaces = Prefix(minLength: 1, while: { $0 == " " })
-
-// Parsers for newlines
-let optionalNewline = Prefix(minLength: 0, maxLength: 1, while: {$0 == "\n" })
-let nonNewlineCharacters = Prefix { $0 != "\n" }
-
-let itemPathSeparator: Character = "."
-let methodPathSeparator: Character = ":"
+let optionalSpace = Prefix(0...1) { $0 == " " }
+let optionalSpaces = Prefix(0...) { $0 == " " }
+let oneOrMoreSpaces = Prefix(1...) { $0 == " " }
 
 // Parses comma separators, allowing for optional spaces either side.
 let commaSeparator = Parse {
