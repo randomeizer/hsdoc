@@ -112,7 +112,7 @@ class TextSpec: QuickSpec {
                 
                 it("outputs multiple lines") {
                     let value = DescriptionDoc(
-                        "one", "two"
+                        .init("one", "two")
                     )
                     
                     XCTAssertNoDifference(

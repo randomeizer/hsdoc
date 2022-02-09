@@ -2,22 +2,24 @@ import NonEmpty
 
 /// Stores description text for an item.
 public struct DescriptionDoc: Equatable {
-    /// The lines of text in the description.
-    public let lines: Lines
+    /// A single paragraph of text.
+    public let paragraph: ParagraphDoc
     
-    public init(_ lines: Lines) {
-        self.lines = lines
-    }
-    
-    public init(_ head: String, _ tail: String...) {
-        var lines = Lines(head)
-        lines.append(contentsOf: tail)
-        self.lines = lines
+    public init(_ paragraph: ParagraphDoc) {
+        self.paragraph = paragraph
     }
 }
 
 extension DescriptionDoc {
     func text(for prefix: Doc.Prefix) -> String {
-        "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
+        paragraph.text(for: prefix)
+    }
+}
+
+extension DescriptionDoc {
+    public init(_ head: String, _ tail: String...) {
+        var lines = Lines(head)
+        lines.append(contentsOf: tail)
+        self.init(ParagraphDoc(lines: lines))
     }
 }

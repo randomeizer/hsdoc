@@ -6,7 +6,7 @@ extension ModuleSignature {
     /// - Returns: The ``Parser``
     static func prefixParser() -> AnyParser<Substring, ModuleSignature> {
         OneOrMore {
-            Identifier.parser()
+            Identifier.parser
             Check {
                 OneOf {
                     "."
@@ -24,7 +24,7 @@ extension ModuleSignature {
     /// - Returns: The ``Parser``
     static func nameParser() -> AnyParser<Substring, ModuleSignature> {
         OneOrMore {
-            Identifier.parser()
+            Identifier.parser
         } separator: {
             "."
         }

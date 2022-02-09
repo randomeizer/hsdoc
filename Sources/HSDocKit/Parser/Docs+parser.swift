@@ -28,7 +28,7 @@ extension Parsers {
         func parse(_ input: inout TextDocument) throws -> DocBlock {
             let original = input
             
-            let _ = try NonDocLines().parse(&input)
+            _ = NonDocLines().parse(&input)
             
             guard let firstLineNumber = input.first?.number else {
                 input = original
@@ -37,7 +37,7 @@ extension Parsers {
             
             let doc: Doc
             do {
-                doc = try Doc.parser().parse(&input)
+                doc = try Doc.parser.parse(&input)
             } catch {
                 input = original
                 throw error

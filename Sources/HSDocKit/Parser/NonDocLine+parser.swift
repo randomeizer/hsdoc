@@ -1,7 +1,7 @@
 import Parsing
 
 struct NonDocLine: Parser {
-    func parse(_ input: inout TextDocument) throws -> Void {
+    func parse(_ input: inout TextDocument) throws {
         guard let firstLine = input.first else {
             throw ParsingError.expectedInput("at least one line", at: input)
         }
@@ -11,7 +11,6 @@ struct NonDocLine: Parser {
         try Not { docPrefix }.parse(&text)
         
         input = input.dropFirst()
-        return ()
     }
 }
 

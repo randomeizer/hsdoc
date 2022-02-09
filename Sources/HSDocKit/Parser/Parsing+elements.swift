@@ -31,3 +31,10 @@ let endOfLineOrInput = OneOf {
     "\n"
     End()
 }
+
+/// matches either one or more blank doc lines, a non-doc line, or the end of input.
+let blankDocLinesOrEnd = OneOf {
+    blankDocLines
+    Check { NonDocLine() }
+    End<TextDocument>()
+}

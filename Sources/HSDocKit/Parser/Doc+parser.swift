@@ -12,84 +12,62 @@ where P: Parser, P.Input == Substring
 
 extension Doc {
     /// Parses a ``Doc`` from a ``Substring``
-    /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<TextDocument, Doc> {
-        OneOf {
-            moduleParser()
-            functionParser()
-            variableParser()
-            methodParser()
-            fieldParser()
-            unrecognisedParser()
-        }
-        .eraseToAnyParser()
+    static let parser = OneOf {
+        moduleParser
+        functionParser
+        variableParser
+        methodParser
+        fieldParser
+        unrecognisedParser
     }
     
-    static func moduleParser() -> AnyParser<TextDocument, Doc> {
-        Parse(Doc.module) {
-            DocLine {
-                "=== "
-                ModuleSignature.nameParser()
-                " ==="
-                Skip { optionalSpaces }
-            }
-            DocLine { "" }
-            DescriptionDoc.parser()
+    static let moduleParser = Parse(Doc.module) {
+        DocLine {
+            "=== "
+            ModuleSignature.nameParser()
+            " ==="
+            Skip { optionalSpaces }
         }
-        .eraseToAnyParser()
+        DocLine { "" }
+        DescriptionDoc.parser
     }
     
-    static func functionParser() -> AnyParser<TextDocument, Doc> {
-        Parse(Doc.function) {
-            DocLine(FunctionSignature.parser())
-            DocLine(deprecable("Function"))
-            DescriptionDoc.parser()
-            ParametersDoc.parser()
-            ReturnsDoc.parser()
-            Optionally { NotesDoc.parser() }
-        }
-        .eraseToAnyParser()
+    static let functionParser = Parse(Doc.function) {
+        DocLine(FunctionSignature.parser)
+        DocLine(deprecable("Function"))
+        DescriptionDoc.parser
+        ParametersDoc.parser
+        ReturnsDoc.parser
+        Optionally { NotesDoc.parser }
     }
     
-    static func variableParser() -> AnyParser<TextDocument, Doc> {
-        Parse(Doc.variable) {
-            DocLine(VariableSignature.parser())
-            DocLine(deprecable("Variable"))
-            DescriptionDoc.parser()
-            Optionally { NotesDoc.parser() }
-        }
-        .eraseToAnyParser()
+    static let variableParser = Parse(Doc.variable) {
+        DocLine(VariableSignature.parser)
+        DocLine(deprecable("Variable"))
+        DescriptionDoc.parser
+        Optionally { NotesDoc.parser }
     }
     
-    static func methodParser() -> AnyParser<TextDocument, Doc> {
-        Parse(Doc.method) {
-            DocLine(MethodSignature.parser())
-            DocLine(deprecable("Method"))
-            DescriptionDoc.parser()
-            ParametersDoc.parser()
-            ReturnsDoc.parser()
-            Optionally { NotesDoc.parser() }
-        }
-        .eraseToAnyParser()
+    static let methodParser = Parse(Doc.method) {
+        DocLine(MethodSignature.parser)
+        DocLine(deprecable("Method"))
+        DescriptionDoc.parser
+        ParametersDoc.parser
+        ReturnsDoc.parser
+        Optionally { NotesDoc.parser }
     }
     
-    static func fieldParser() -> AnyParser<TextDocument, Doc> {
-        Parse(Doc.field) {
-            DocLine(FieldSignature.parser())
-            DocLine(deprecable("Field"))
-            DescriptionDoc.parser()
-            Optionally { NotesDoc.parser() }
-        }
-        .eraseToAnyParser()
+    static let fieldParser = Parse(Doc.field) {
+        DocLine(FieldSignature.parser)
+        DocLine(deprecable("Field"))
+        DescriptionDoc.parser
+        Optionally { NotesDoc.parser }
     }
     
-    static func unrecognisedParser() -> AnyParser<TextDocument, Doc> {
-        OneOrMore {
-            DocLine {
-                Rest().map(String.init)
-            }
+    static let unrecognisedParser = OneOrMore {
+        DocLine {
+            Rest().map(String.init)
         }
-        .map(Doc.unrecognised(lines:))
-        .eraseToAnyParser()
     }
+    .map(Doc.unrecognised(lines:))
 }
