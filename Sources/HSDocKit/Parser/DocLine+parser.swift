@@ -1,5 +1,20 @@
 import Parsing
 
+// Parses documentation comment prefixes, including a single optional space.
+let docPrefix = Parse {
+    OneOf {
+        Parse { // ObjC
+            "///"
+            Not { "/" }
+        }
+        Parse { // Lua
+            "---"
+            Not { "-" }
+        }
+    }
+    Skip { optionalSpace }
+}
+
 /// Parses a single 'documentation' comment line, starting with `///` or `---` and ending with a newline
 /// The `Upstream` ``Parser`` will only be passed the contents of a single line, excluding the header and the newline.
 /// It must consume the whole contents of the line, other than trailing whitespace.
@@ -36,4 +51,9 @@ where Upstream: Parser, Upstream.Input == Substring
         input = input.dropFirst()
         return result
     }
+}
+
+// Parses at least one blank documentation line ("///")
+let blankDocLines = Skip {
+    OneOrMore { DocLine("") }
 }
