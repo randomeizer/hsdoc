@@ -4,7 +4,7 @@ extension List {
     
     /// Parses a list of ``ListItem``s.
     static let parser = OneOrMore {
-        ListItem.parser()
+        ListItem.parser
     } terminator: {
         blankDocLinesOrEnd
     }

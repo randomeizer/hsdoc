@@ -2,10 +2,7 @@ import Parsing
 
 extension ListItem {
     /// Creates a `Parser` for list items.
-    /// - Returns: The `Parser`.
-    static func parser() -> Parsers.ListItemParser {
-        .init()
-    }
+    static let parser = Parsers.ListItemParser()
 }
 
 extension Parsers {

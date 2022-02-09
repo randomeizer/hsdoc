@@ -6,7 +6,7 @@ typealias Docs = [DocBlock]
 extension Docs {
     /// Parses a ``Docs`` value from a ``Substring``
     static let parser = Many {
-        DocBlock.parser()
+        DocBlock.parser
     }
 }
 
@@ -45,7 +45,5 @@ extension Parsers {
 }
 
 extension DocBlock {
-    static func parser() -> Parsers.DocBlockParser {
-        Parsers.DocBlockParser()
-    }
+    static let parser = Parsers.DocBlockParser()
 }
