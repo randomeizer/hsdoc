@@ -7,7 +7,7 @@ extension ModuleSignature {
     static func prefixParser() -> AnyParser<Substring, ModuleSignature> {
         OneOrMore {
             Identifier.parser()
-            Require {
+            Check {
                 OneOf {
                     "."
                     ":"
