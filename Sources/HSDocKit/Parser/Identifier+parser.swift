@@ -19,6 +19,6 @@ extension Identifier {
         } orThrow: { (_, _) in
             LintError.expected("letter or underscore")
         }
-        Prefix(while: isIdentifier(_:)).map(String.init)
+        Prefix(while: isIdentifier(_:))
     }
 }

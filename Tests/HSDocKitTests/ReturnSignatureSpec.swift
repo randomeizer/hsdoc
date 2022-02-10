@@ -13,13 +13,13 @@ class ReturnSignatureSpec: QuickSpec {
                 itFailsParsing("nothing", with: parser) {
                     ""
                 } withErrorMessage: {
-                    "expected the return type"
+                    "expected a return type"
                 }
                 
                 itFailsParsing("blank line", with: parser) {
                     "\n"
                 } withErrorMessage: {
-                    "expected the return type"
+                    "expected a return type"
                 }
             }
             

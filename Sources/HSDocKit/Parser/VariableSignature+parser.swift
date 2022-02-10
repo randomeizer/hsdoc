@@ -10,7 +10,7 @@ extension VariableSignature {
         Identifier.parser
         Optionally {
             Skip { oneOrMoreSpaces }
-            Prefix(1...).map(VariableType.init)
+            Prefix(1...)
         }
         Skip { optionalSpaces }
         End()
