@@ -14,7 +14,7 @@ class ParserElementsSpec: QuickSpec {
                     ("two dashes",          "--",   false,  "--",   #line),
                     ("four dashes",         "----", false,  "----", #line),
                     ("two slashes",         "//",   false,  "//",   #line),
-                    ("four slashes",        "////", false,  "////", #line),
+                    ("four slashes",        "////", false,  "/",    #line),
                     ("slash dash",          "///-", true,   "-",    #line),
                     ("dash slash",          "---/", true,   "/",    #line)
                 ) { (label, input, parses, remainder, line: UInt) in

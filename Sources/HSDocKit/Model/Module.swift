@@ -1,11 +1,14 @@
+import NonEmpty
 
 /// Defines a module of functions/methods/etc.
 public class Module {
+    public typealias Description = NonEmpty<[ParagraphDoc]>
+    
     /// The name of the ``Module``.
     public let name: ModuleSignature
     
     /// The documentation for the ``Module``.
-    public let description: DescriptionDoc
+    public let description: Description
     
     /// The list of fields defined for the module.
     public var fields: [Doc] = []
@@ -23,7 +26,7 @@ public class Module {
     ///
     /// - Parameters:
     ///   - doc: The documentation for the module.
-    public init(name: ModuleSignature, description: DescriptionDoc) {
+    public init(name: ModuleSignature, description: Description) {
         self.name = name
         self.description = description
     }

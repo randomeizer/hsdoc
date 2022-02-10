@@ -67,7 +67,8 @@ where P: Parser, Input == P.Input, Output == P.Output, Output: Equatable, Input:
         } catch {
             withError(error)
         }
-        expect(file: file, line: line, inputSub).to(equal(remainder()), description: "remainder")
+        XCTAssertNoDifference(inputSub, remainder(), "remainder", file: file, line: line)
+//        expect(file: file, line: line, inputSub).to(equal(remainder()), description: "remainder")
     }
 }
 

@@ -2,15 +2,11 @@ import Parsing
 
 extension ParagraphDoc {
     static let parser = OneOrMore {
-        DocLine {
-            optionalSpaces
-            Prefix(1...)
-        }
-        .map { "\($0)\($1)" }
+        nonBlankDocLine
     } terminator: {
         blankDocLinesOrEnd
     }
-    .map {
-        ParagraphDoc(lines: $0)
+    .map { lines in
+        ParagraphDoc(lines: lines)
     }
 }

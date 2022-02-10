@@ -33,7 +33,7 @@ extension Doc {
             Skip { optionalSpaces }
         }
         DocLine { "" }
-        DescriptionDoc.parser
+        OneOrMore { ParagraphDoc.parser }
     }
     
     static let functionParser = Parse(Doc.function) {
@@ -70,7 +70,7 @@ extension Doc {
     
     static let unrecognisedParser = OneOrMore {
         DocLine {
-            Rest().map(String.init)
+            Rest()
         }
     }
     .map(Doc.unrecognised(lines:))

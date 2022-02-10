@@ -52,8 +52,3 @@ where Upstream: Parser, Upstream.Input == Substring
         return result
     }
 }
-
-// Parses at least one blank documentation line ("///")
-let blankDocLines = Skip {
-    OneOrMore { DocLine("") }
-}

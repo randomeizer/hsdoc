@@ -20,7 +20,7 @@ class DocSpec: QuickSpec {
                 } to: {
                     Doc.module(
                         name: .init("foo", "bar"),
-                        description: .init("Description.")
+                        description: .init(.init("Description."))
                     )
                 }
             }
@@ -167,6 +167,12 @@ class DocSpec: QuickSpec {
                 } withErrorMessage: {
                     #warning("strange error due to not having access to `Parsing.ParsingError`")
                     return "error: expected Variable or Deprecated"
+                } leaving: {
+                    TextDocument(firstLine: 2) {
+                    """
+                    /// Description.
+                    """
+                    }
                 }
             }
             
@@ -314,6 +320,12 @@ class DocSpec: QuickSpec {
                 } withErrorMessage: {
                     #warning("strange error message due to not having access to `Parsing.ParsingError`")
                     return "error: expected Field or Deprecated"
+                } leaving: {
+                    TextDocument(firstLine: 2) {
+                    """
+                    /// Description.
+                    """
+                    }
                 }
             }
 

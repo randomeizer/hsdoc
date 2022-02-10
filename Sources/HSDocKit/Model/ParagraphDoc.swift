@@ -13,7 +13,7 @@ public struct ParagraphDoc: Equatable {
     /// - Parameters:
     ///   - head: The first line.
     ///   - tail: Additional lines.
-    public init(_ head: String, _ tail: String...) {
+    public init(_ head: Substring, _ tail: Substring...) {
         var lines = Lines(head)
         lines.append(contentsOf: tail)
         self.lines = lines
@@ -24,5 +24,15 @@ public struct ParagraphDoc: Equatable {
 extension ParagraphDoc {
     func text(for prefix: Doc.Prefix) -> String {
         "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
+    }
+}
+
+extension ParagraphDoc: ExpressibleByStringLiteral {
+    public init(stringLiteral: String) {
+        if let lines = NonEmpty<[Substring]>(stringLiteral.split(separator: "\n")) {
+            self.init(lines: lines)
+        } else {
+            self.init(stringLiteral[...])
+        }
     }
 }

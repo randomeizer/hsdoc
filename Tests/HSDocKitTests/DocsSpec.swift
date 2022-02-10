@@ -91,7 +91,7 @@ class DocsSpec: QuickSpec {
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
-                            name: .init("my", "module"), description: .init("Module description.")
+                            name: .init("my", "module"), description: .init(.init("Module description."))
                         )),
                         .init(lineNumber: 9, doc: .function(
                             signature: .init(module: .init("my", "module"), name: "funcWithReturn",
@@ -185,7 +185,7 @@ class DocsSpec: QuickSpec {
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
-                            name: .init("my", "module"), description: .init("Module description.")
+                            name: .init("my", "module"), description: .init(.init("Module description."))
                         )),
                         .init(lineNumber: 9, doc: .function(
                             signature: .init(

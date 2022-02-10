@@ -17,7 +17,7 @@ extension DescriptionDoc {
 }
 
 extension DescriptionDoc {
-    public init(_ head: String, _ tail: String...) {
+    public init(_ head: Substring, _ tail: Substring...) {
         var lines = Lines(head)
         lines.append(contentsOf: tail)
         self.init(ParagraphDoc(lines: lines))

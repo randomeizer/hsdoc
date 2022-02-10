@@ -36,17 +36,21 @@ class VariableSignatureSpec: QuickSpec {
                     1 | foo.bar()
                       |        ^ expected end of input
                     """
+                } leaving: {
+                    "()"
                 }
                 
                 itFailsParsing("method", with: parser) {
                     "foo:bar()"
                 } withErrorMessage: {
                     """
-                    error: unexpected input
+                    error: expected letter or underscore
                      --> input:1:4
                     1 | foo:bar()
-                      |    ^ expected end of input
+                      |    ^
                     """
+                } leaving: {
+                    ":bar()"
                 }
             }
         }

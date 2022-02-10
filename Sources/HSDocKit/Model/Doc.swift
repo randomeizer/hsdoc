@@ -1,3 +1,4 @@
+import NonEmpty
 /// Defines the options for documentation segments.
 public enum Doc: Equatable {
     enum Prefix: String, CustomStringConvertible {
@@ -11,7 +12,7 @@ public enum Doc: Equatable {
     
     case module(
         name: ModuleSignature,
-        description: DescriptionDoc
+        description: NonEmpty<[ParagraphDoc]>
     )
     
     case function(

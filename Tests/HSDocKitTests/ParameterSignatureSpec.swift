@@ -125,6 +125,8 @@ class ParameterSignatureSpec: QuickSpec {
                         1 | (foo,)
                           |     ^ expected ")"
                         """
+                    } leaving: {
+                        ",)"
                     }
                 }
             }

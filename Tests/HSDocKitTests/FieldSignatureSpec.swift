@@ -29,6 +29,8 @@ class FieldSignatureSpec: QuickSpec {
                     1 | foo.bar()
                       |        ^ expected end of input
                     """
+                } leaving: {
+                    "()"
                 }
                 
                 itFailsParsing("method", with: parser) {
@@ -40,6 +42,8 @@ class FieldSignatureSpec: QuickSpec {
                     1 | foo:bar()
                       |    ^ expected "."
                     """
+                } leaving: {
+                    ":bar()"
                 }
             }
         }

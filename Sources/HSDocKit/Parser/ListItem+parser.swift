@@ -23,13 +23,13 @@ extension Parsers {
                 DocLine {
                     Skip { String(inset) }
                     Not { "*" }
-                    Rest().map(String.init)
+                    Rest()
                 }
             }
             
             let subLines = try subLineParser.parse(&inputCopy)
             
-            var lines = Lines(String(body))
+            var lines = Lines(body)
             lines.append(contentsOf: subLines)
             
             input = inputCopy

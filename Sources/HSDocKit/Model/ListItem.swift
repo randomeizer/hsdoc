@@ -17,7 +17,7 @@ public struct ListItem: Equatable {
     /// - Parameters:
     ///   - head: The first line.
     ///   - tail: Additional lines.
-    public init(_ head: String, _ tail: String...) {
+    public init(_ head: Substring, _ tail: Substring...) {
         var lines = Lines(head)
         lines.append(contentsOf: tail)
         self.lines = lines
