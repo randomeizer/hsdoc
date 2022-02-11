@@ -23,3 +23,19 @@ where Upstream: Parser
         }
     }
 }
+
+extension Require {
+    @inlinable
+    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping (inout Upstream.Input) -> Error) {
+        self.init(upstream) { _, input in
+            fail(&input)
+        }
+    }
+    
+    @inlinable
+    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping () -> Error) {
+        self.init(upstream) { _, _ in
+            fail()
+        }
+    }
+}

@@ -114,6 +114,8 @@ class DocsSpec: QuickSpec {
                     --- === my.module ===
                     ---
                     --- Module description.
+                    ---
+                    --- A second line of description.
 
                     local foo = require("foo")
 
@@ -185,9 +187,13 @@ class DocsSpec: QuickSpec {
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
-                            name: .init("my", "module"), description: .init(.init("Module description."))
+                            name: .init("my", "module"),
+                            description: .init(
+                                .init("Module description."),
+                                .init("A second line of description.")
+                            )
                         )),
-                        .init(lineNumber: 9, doc: .function(
+                        .init(lineNumber: 11, doc: .function(
                             signature: .init(
                                 module: .init("my", "module"), name: "funcWithReturn",
                                 parameters: [.init(name: "a"), .init(name: "b")],
@@ -196,10 +202,10 @@ class DocsSpec: QuickSpec {
                             parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                             returns: .init(.init("`true` if some condition is met.")),
                             notes: nil)),
-                        .init(lineNumber: 23, doc: .variable(
+                        .init(lineNumber: 25, doc: .variable(
                             signature: .init(module: .init("my", "module"), name: "var"),
                             description: .init("Variable description."))),
-                        .init(lineNumber: 28, doc: .method(
+                        .init(lineNumber: 30, doc: .method(
                             signature: .init(
                                 module: .init("my", "module"), name: "methodWithoutReturn",
                                 parameters: [.init(name: "a"), .init(name: "b", isOptional: true)]),
@@ -207,7 +213,7 @@ class DocsSpec: QuickSpec {
                             parameters: .init(.init("a - a parameter."), .init("b - an optional parameter.")),
                             returns: .init(.init("Nothing.")),
                             notes: nil)),
-                        .init(lineNumber: 41, doc: .method(
+                        .init(lineNumber: 43, doc: .method(
                             signature: .init(
                                 module: .init("my", "module"), name: "methodWithReturn",
                                 parameters: [.init(name: "a")],
@@ -217,11 +223,11 @@ class DocsSpec: QuickSpec {
                             parameters: .init(.init("a - a `string` parameter.")),
                             returns: .init(.init("The same string.")),
                             notes: nil)),
-                        .init(lineNumber: 54, doc: .field(
+                        .init(lineNumber: 56, doc: .field(
                             signature: .init(module: .init("my", "module"), name: "field", type: "<table: string>"),
                             description: .init("A `table` containing `string`s.")
                         )),
-                        .init(lineNumber: 61, doc: .unrecognised(lines: .init(
+                        .init(lineNumber: 63, doc: .unrecognised(lines: .init(
                             "my.module.badMethod()",
                             "Method",
                             "Should fail due to missing ':'.",

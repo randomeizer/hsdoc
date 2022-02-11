@@ -6,6 +6,6 @@ extension List {
     static let parser = OneOrMore {
         ListItem.parser
     } terminator: {
-        blankDocLinesOrEnd
+        blankDocLineOrEnd
     }
 }

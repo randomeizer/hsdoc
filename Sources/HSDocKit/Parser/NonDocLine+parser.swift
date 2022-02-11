@@ -8,9 +8,14 @@ struct NonDocLine: Parser {
         
         var text = firstLine.text
         
-        try Not { docPrefix }.parse(&text)
+        do {
+            _ = try docPrefix.parse(&text)
+        } catch {
+            input = input.dropFirst()
+            return
+        }
         
-        input = input.dropFirst()
+        throw LintError.expected("not to have a documentation prefix")
     }
 }
 

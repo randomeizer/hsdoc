@@ -5,11 +5,15 @@ public struct ListItem: Equatable {
     /// The contents of the list item.
     public let lines: Lines
     
+    public let items: List?
+    
     /// Constructs a new `ListItem` with the specified lines.
     ///
     /// - Parameter lines: The lines of the list item.
-    public init(lines: Lines) {
+    /// - Parameter items: Any sub-items of this item.
+    public init(lines: Lines, items: List? = nil) {
         self.lines = lines
+        self.items = items
     }
     
     /// Constructs a new `ListItem` with the specified lines.
@@ -21,6 +25,7 @@ public struct ListItem: Equatable {
         var lines = Lines(head)
         lines.append(contentsOf: tail)
         self.lines = lines
+        self.items = nil
     }
 }
 

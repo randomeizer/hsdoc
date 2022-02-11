@@ -36,7 +36,7 @@ where Upstream: Parser, Upstream.Input == Substring
     @inlinable
     func parse(_ input: inout TextDocument) throws -> Upstream.Output {
         guard let firstLine = input.first else {
-            throw LintError.expected("at least one line required")
+            throw LintError.expected("at least one line")
         }
         
         var text = firstLine.text

@@ -35,8 +35,12 @@ let endOfLineOrInput = OneOf {
     End()
 }
 
-let blankDocLine = DocLine {
-    Skip { optionalSpaces }
+let blankDocLine = Require {
+    DocLine {
+        Skip { optionalSpaces }
+    }
+} orThrow: {
+    LintError.expected("a blank documentation line")
 }
 
 // Parses at least one blank documentation line ("///")
@@ -47,10 +51,14 @@ let blankDocLines = Skip {
 }
 
 /// matches either one or more blank doc lines, a non-doc line, or the end of input.
-let blankDocLinesOrEnd = OneOf {
-    blankDocLines
-    Check { NonDocLine() }
-    End<TextDocument>()
+let blankDocLineOrEnd = Check {
+    OneOf {
+        blankDocLine
+        NonDocLine()
+        End<TextDocument>()
+    }
+} orThrow: {
+    LintError.expected("blank documentation line or end of documentation block")
 }
 
 /// matches any doc line with at least one non-whitespace character after the prefix.

@@ -9,7 +9,7 @@ where P: Parser, P.Input == Substring
             match.map { _ in false }
             "Deprecated".map { true }
         }
-    } orThrow: { (_, _) in
+    } orThrow: {
         LintError.expected("\(match) or Deprecated")
     }
 }
@@ -25,15 +25,17 @@ extension Doc {
         unrecognisedParser
     }
     
+    /// Parses a 'Module'
     static let moduleParser = Parse(Doc.module) {
         DocLine {
             "=== "
             ModuleSignature.nameParser
             " ==="
-            Skip { optionalSpaces }
         }
-        DocLine { "" }
-        OneOrMore { ParagraphDoc.parser }
+        OneOrMore {
+            blankDocLine
+            ParagraphDoc.parser
+        }
     }
     
     static let functionParser = Parse(Doc.function) {
@@ -42,14 +44,20 @@ extension Doc {
         DescriptionDoc.parser
         ParametersDoc.parser
         ReturnsDoc.parser
-        Optionally { NotesDoc.parser }
+        Optionally {
+            blankDocLine
+            NotesDoc.parser
+        }
     }
     
     static let variableParser = Parse(Doc.variable) {
         DocLine(VariableSignature.parser)
         DocLine(deprecable("Variable"))
         DescriptionDoc.parser
-        Optionally { NotesDoc.parser }
+        Optionally {
+            blankDocLine
+            NotesDoc.parser
+        }
     }
     
     static let methodParser = Parse(Doc.method) {
@@ -58,14 +66,20 @@ extension Doc {
         DescriptionDoc.parser
         ParametersDoc.parser
         ReturnsDoc.parser
-        Optionally { NotesDoc.parser }
+        Optionally {
+            blankDocLine
+            NotesDoc.parser
+        }
     }
-    
+
     static let fieldParser = Parse(Doc.field) {
         DocLine(FieldSignature.parser)
         DocLine(deprecable("Field"))
         DescriptionDoc.parser
-        Optionally { NotesDoc.parser }
+        Optionally {
+            blankDocLine
+            NotesDoc.parser
+        }
     }
     
     static let unrecognisedParser = OneOrMore {

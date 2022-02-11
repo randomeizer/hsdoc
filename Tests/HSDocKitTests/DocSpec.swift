@@ -82,7 +82,7 @@ class DocSpec: QuickSpec {
                             .init("This is a description", "over two lines.")
                         ),
                         parameters: .init(
-                            ListItem("a - first param", "  with multi-line description."),
+                            ListItem("a - first param", "with multi-line description."),
                             ListItem("b - optional param.")
                         ),
                         returns: .init(ListItem("a number."), ListItem("a boolean.")),
@@ -91,6 +91,71 @@ class DocSpec: QuickSpec {
                             ListItem("another note.")
                         )
                     )
+                }
+                
+                itFailsParsing("missing parameters", with: parser) {
+                    TextDocument {
+                    """
+                    --- foo.bar(a)
+                    --- Function
+                    --- Description.
+                    """
+                    }
+                } withErrorMessage: {
+                    """
+                    error: expected blank line before Parameters
+                    """
+                } leaving: {
+                    TextDocument()
+                }
+                
+                itFailsParsing("missing returns", with: parser) {
+                    TextDocument {
+                    """
+                    --- foo.bar(a)
+                    --- Function
+                    --- Description.
+                    ---
+                    --- Parameters:
+                    ---  * a - The first parameter.
+                    """
+                    }
+                } withErrorMessage: {
+                    """
+                    error: expected blank line before Returns
+                    """
+                } leaving: {
+                    TextDocument()
+                }
+                
+                
+                itFailsParsing("with extra blank line", with: parser) {
+                    TextDocument {
+                    """
+                    --- foo.bar(a)
+                    --- Function
+                    --- Description.
+                    ---
+                    ---
+                    --- Parameters:
+                    ---  * a - The first parameter.
+                    """
+                    }
+                } withErrorMessage: {
+                    """
+                    error: unexpected input
+                     --> input:5:4
+                    5 | ---
+                      |    ^ expected "Parameters:"
+                    """
+                } leaving: {
+                    TextDocument(firstLine: 5) {
+                    """
+                    ---
+                    --- Parameters:
+                    ---  * a - The first parameter.
+                    """
+                    }
                 }
             }
             

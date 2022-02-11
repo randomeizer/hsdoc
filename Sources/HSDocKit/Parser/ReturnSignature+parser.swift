@@ -8,7 +8,7 @@ extension ReturnSignature {
         Trim {
             Prefix(1...) { !",\n".contains($0) }
         }
-    } orThrow: { (_, _) in
+    } orThrow: {
         LintError.expected("a return type")
     }
     .map(ReturnSignature.init)
