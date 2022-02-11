@@ -19,7 +19,9 @@ extension Doc {
     static let parser = OneOf {
         moduleParser
         functionParser
+        constantParser
         variableParser
+        constructorParser
         methodParser
         fieldParser
         unrecognisedParser
@@ -45,7 +47,25 @@ extension Doc {
         ParametersDoc.parser
         ReturnsDoc.parser
         Optionally {
-            blankDocLine
+            NotesDoc.parser
+        }
+    }
+    .verify { value in
+        if case let .function(signature, _, _, parameters, _, _) = value,
+           case let sigCount = signature.parameters.count,
+           case let paramCount = parameters.items.count,
+           sigCount == 0 && paramCount != 1,
+           sigCount != paramCount
+        {
+            throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
+        }
+    }
+    
+    static let constantParser = Parse(Doc.constant) {
+        DocLine(ConstantSignature.parser)
+        DocLine(deprecable("Constant"))
+        DescriptionDoc.parser
+        Optionally {
             NotesDoc.parser
         }
     }
@@ -55,11 +75,31 @@ extension Doc {
         DocLine(deprecable("Variable"))
         DescriptionDoc.parser
         Optionally {
-            blankDocLine
             NotesDoc.parser
         }
     }
     
+    static let constructorParser = Parse(Doc.constructor) {
+        DocLine(ConstructorSignature.parser)
+        DocLine(deprecable("Constructor"))
+        DescriptionDoc.parser
+        ParametersDoc.parser
+        ReturnsDoc.parser
+        Optionally {
+            NotesDoc.parser
+        }
+    }
+    .verify { value in
+        if case let .constructor(signature, _, _, parameters, _, _) = value,
+           case let sigCount = signature.parameters.count,
+           case let paramCount = parameters.items.count,
+           sigCount == 0 && paramCount != 1,
+           sigCount != paramCount
+        {
+            throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
+        }
+    }
+
     static let methodParser = Parse(Doc.method) {
         DocLine(MethodSignature.parser)
         DocLine(deprecable("Method"))
@@ -67,8 +107,17 @@ extension Doc {
         ParametersDoc.parser
         ReturnsDoc.parser
         Optionally {
-            blankDocLine
             NotesDoc.parser
+        }
+    }
+    .verify { value in
+        if case let .method(signature, _, _, parameters, _, _) = value,
+           case let sigCount = signature.parameters.count,
+           case let paramCount = parameters.items.count,
+           sigCount == 0 && paramCount != 1,
+           sigCount != paramCount
+        {
+            throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
         }
     }
 
@@ -77,7 +126,6 @@ extension Doc {
         DocLine(deprecable("Field"))
         DescriptionDoc.parser
         Optionally {
-            blankDocLine
             NotesDoc.parser
         }
     }

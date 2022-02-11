@@ -39,7 +39,7 @@ public enum Doc: Equatable {
     )
     
     case constructor(
-        signature: FunctionSignature,
+        signature: ConstructorSignature,
         deprecated: Bool = false,
         description: DescriptionDoc,
         parameters: ParametersDoc,
@@ -65,12 +65,6 @@ public enum Doc: Equatable {
     
     case unrecognised(
         lines: Lines
-    )
-    
-    case error(
-        atLine: UInt? = nil,
-        expected: String,
-        actual: [String]?
     )
 }
 
@@ -158,12 +152,6 @@ extension Doc: CustomStringConvertible {
 
         case .unrecognised(lines: let lines):
             return "\(prefix) \(lines.joined(separator: "\n\(prefix) "))"
-            
-        case let .error(atLine: line, expected: expected, actual: actual):
-            return """
-            \(prefix) ERROR(line: \(line?.description ?? "?")): Expected \(expected). Actual:
-            \(prefix) \(actual?.joined(separator: "\n\(prefix) ") ?? "")
-            """
         }
     }
     

@@ -1,8 +1,8 @@
 import Parsing
 
-extension ConstantSignature {
-    /// Parses a ``ConstantSignature`` from a ``Substring``.
-    static let parser = Parse(ConstantSignature.init) {
+extension VariableSignature {
+    /// Parses a ``VariableSignature`` from a ``Substring``.
+    static let parser = Parse(VariableSignature.init) {
         Optionally {
             ModuleSignature.prefixParser
             "."
