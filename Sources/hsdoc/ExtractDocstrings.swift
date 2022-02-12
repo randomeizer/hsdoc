@@ -20,11 +20,17 @@ extension ExtractionError: CustomStringConvertible {
 
 @main
 struct ExtractDocstrings: ParsableCommand {
-    @Argument(help: "Directories to search for code files")
+    @Argument(help: "Directories to search for code files.")
     var searchDirs: [String] = []
     
-    @Flag
-    var verbose: Bool = false
+    @Option(name: .shortAndLong, help: "The output filename.")
+    var output: String
+    
+    @Flag(name: .shortAndLong, help: "Output additional details while processing.")
+    var noisy: Bool = false
+    
+    @Flag(help: "Output debugging information while processing.")
+    var debug: Bool = false
 
     mutating func run() throws {
         guard !searchDirs.isEmpty else {
@@ -40,7 +46,7 @@ struct ExtractDocstrings: ParsableCommand {
     func parseFiles(in directories: [String]) -> [String:Docs] {
         var docs = [String:Docs]()
         for searchDir in directories {
-            debug("Searching: \(searchDir)")
+            info("Searching: \(searchDir)")
             
             let folder: Folder
             do {
@@ -80,29 +86,42 @@ struct ExtractDocstrings: ParsableCommand {
         true
     }
     
-    // Utility functions
+    /// Outputs the message if `debug` is `true`
+    ///
+    /// - Parameter message: The message to output.
     func debug(_ message: @autoclosure () -> String) {
-    #if DEBUG
-        print("DEBUG: \(message())")
-    #endif
+        if debug {
+            print("DEBUG: \(message())")
+        }
     }
     
+    /// Outputs the message if `verbose` is `true`.
+    ///
+    /// - Parameter message: The message to output.
     func info(_ message: @autoclosure () -> String) {
-        if verbose {
+        if noisy {
             print("INFO: \(message())")
         }
     }
 
-    func warn(_ message: @autoclosure () -> String) {
-        if verbose {
-            print("WARNING: \(message())")
-        }
+    /// Outputs the message as a `"WARNING"`.
+    ///
+    /// - Parameter message: The message to output.
+    func warn(_ message: String) {
+        print("WARNING: \(message)")
     }
 
+    /// Outputs the message as an `"ERROR"`.
+    ///
+    /// - Parameter message: The message to output.
     func err(_ message: String) {
-        print("ERROR: \(message)")
+        var stdErr = StandardErrorOutputStream()
+        print("ERROR: \(message)", to: &stdErr)
     }
     
+    /// Fails, terminating the execution, and outputting the message.
+    ///
+    /// - Parameter message: The message to output.
     func fail(_ message: String) -> Never {
         Self.exit(withError: ExtractionError.message(message))
     }
