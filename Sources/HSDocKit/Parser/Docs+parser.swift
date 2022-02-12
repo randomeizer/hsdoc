@@ -3,10 +3,10 @@ import Parsing
 /// Describes a parsed block of documentation mixed into other file content (eg. code).
 public struct DocBlock: Equatable {
     /// The line number the block started on.
-    let lineNumber: UInt
+    public let lineNumber: UInt
     
     /// The documentation in the block.
-    let doc: Doc
+    public let doc: Doc
 }
 
 extension DocBlock {

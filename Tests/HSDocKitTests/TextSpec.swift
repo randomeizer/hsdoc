@@ -229,7 +229,7 @@ class TextSpec: QuickSpec {
             
             context("Doc.function") {
                 it("outputs a simple value") {
-                    let value = Doc.function(
+                    let value = ModuleItem.function(
                         signature: .init(name: "one"),
                         deprecated: false,
                         description: .init("Description"),
@@ -255,7 +255,7 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs a complex value") {
-                    let value = Doc.function(
+                    let value = ModuleItem.function(
                         signature: .init(
                             module: .init("foo", "bar"),
                             name: "one",
@@ -304,7 +304,7 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs an objc block") {
-                    let value = Doc.function(
+                    let value = ModuleItem.function(
                         signature: .init(
                             module: .init("foo", "bar"),
                             name: "one",

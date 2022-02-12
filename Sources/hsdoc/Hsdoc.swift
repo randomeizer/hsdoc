@@ -19,14 +19,14 @@ extension ExtractionError: CustomStringConvertible {
 }
 
 @main
-struct ExtractDocstrings: ParsableCommand {
+struct Hsdoc: ParsableCommand {
     @Argument(help: "Directories to search for code files.")
     var searchDirs: [String] = []
     
     @Option(name: .shortAndLong, help: "The output filename.")
     var output: String
     
-    @Flag(name: .shortAndLong, help: "Output additional details while processing.")
+    @Flag(help: "Output additional details while processing.")
     var noisy: Bool = false
     
     @Flag(help: "Output debugging information while processing.")
@@ -82,8 +82,32 @@ struct ExtractDocstrings: ParsableCommand {
         }
     }
     
-    func processDocs(in: [String:Docs]) -> Any {
-        true
+    func processDocs(in parsedDocs: [String:Docs]) -> [Module] {
+        var moduleSet = [ModuleSignature:Module]()
+        var modules = [Module]()
+        
+        for (filename, docs) in parsedDocs {
+            for docBlock in docs {
+                switch docBlock.doc {
+                case let .module(name: name, description: _):
+                    if moduleSet[name] != nil {
+                        err("Duplicate module defined in '\(filename)': \(name)")
+                    } else {
+                        guard let module = Module(doc: docBlock.doc) else {
+                            err("Unexpected error occurred while initialising a module.")
+                            break
+                        }
+                        moduleSet[name] = module
+                        modules.append(module)
+                    }
+                case .item(let item):
+                    #warning("unimplemented")
+                    break
+                }
+            }
+        }
+        
+        return modules
     }
     
     /// Outputs the message if `debug` is `true`
