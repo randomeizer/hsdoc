@@ -34,10 +34,7 @@ extension Doc {
             ModuleSignature.nameParser
             " ==="
         }
-        OneOrMore {
-            blankDocLine
-            ParagraphDoc.parser
-        }
+        ModuleDescriptionDoc.parser
     }
     
     static let functionParser = Parse(Doc.function) {

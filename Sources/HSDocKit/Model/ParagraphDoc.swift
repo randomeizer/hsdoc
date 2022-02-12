@@ -27,6 +27,12 @@ extension ParagraphDoc {
     }
 }
 
+extension ParagraphDoc: CustomStringConvertible {
+    public var description: String {
+        text(for: .lua)
+    }
+}
+
 extension ParagraphDoc: ExpressibleByStringLiteral {
     public init(stringLiteral: String) {
         if let lines = NonEmpty<[Substring]>(stringLiteral.split(separator: "\n")) {

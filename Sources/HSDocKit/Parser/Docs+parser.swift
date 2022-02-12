@@ -1,17 +1,7 @@
 import Parsing
 
-/// A collection of ``Doc`` values.
-typealias Docs = [DocBlock]
-
-extension Docs {
-    /// Parses a ``Docs`` value from a ``Substring``
-    static let parser = Many {
-        DocBlock.parser
-    }
-}
-
 /// Describes a parsed block of documentation mixed into other file content (eg. code).
-struct DocBlock: Equatable {
+public struct DocBlock: Equatable {
     /// The line number the block started on.
     let lineNumber: UInt
     
@@ -19,9 +9,23 @@ struct DocBlock: Equatable {
     let doc: Doc
 }
 
+extension DocBlock {
+    public static let parser = Parsers.DocBlockParser()
+}
+
+extension DocBlock: CustomStringConvertible {
+    public var description: String {
+        """
+        
+        line \(lineNumber):
+        \(doc)
+        """
+    }
+}
+
 extension Parsers {
-    struct DocBlockParser: Parser {
-        func parse(_ input: inout TextDocument) throws -> DocBlock {
+    public struct DocBlockParser: Parser {
+        public func parse(_ input: inout TextDocument) throws -> DocBlock {
             let original = input
             
             _ = NonDocLines().parse(&input)
@@ -42,8 +46,4 @@ extension Parsers {
             return .init(lineNumber: firstLineNumber, doc: doc)
         }
     }
-}
-
-extension DocBlock {
-    static let parser = Parsers.DocBlockParser()
 }

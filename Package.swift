@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-parsing.git", branch: "parser-builder-throws-2"),
         .package(url: "https://github.com/pointfreeco/swift-nonempty.git", from: "0.4.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.3"),
+        .package(url: "https://github.com/JohnSundell/Files", from: "4.0.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "9.0.0"),
         .package(url: "https://github.com/Quick/Quick.git", from: "3.0.1"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.3.0")
@@ -40,7 +41,7 @@ let package = Package(
             ]),
         .executableTarget(name: "hsdoc",
                 dependencies: [
-                    "HSDocKit",
+                    "HSDocKit", "Files",
                     .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 ]),
     ]

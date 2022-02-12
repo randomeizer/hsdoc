@@ -12,7 +12,7 @@ public enum Doc: Equatable {
     
     case module(
         name: ModuleSignature,
-        description: NonEmpty<[ParagraphDoc]>
+        description: ModuleDescriptionDoc
     )
     
     case function(
@@ -73,9 +73,9 @@ extension Doc: CustomStringConvertible {
         switch self {
         case let .module(name: name, description: description):
             return """
-            \(prefix) \(name)
+            \(prefix) === \(name) ===
             \(prefix)
-            \(prefix) \(description)
+            \(description.text(for: prefix))
             """
             
         case let .function(signature: signature, deprecated: deprecated, description: description, parameters: parameters, returns: returns, notes: notes):
@@ -157,5 +157,16 @@ extension Doc: CustomStringConvertible {
     
     public var description: String {
         text(for: .lua)
+    }
+}
+
+extension NonEmpty where Element == ParagraphDoc {
+    var description: String {
+        var result = ""
+        for item in self {
+            result = result.appending(String(describing: item))
+            result = result.appending("\n\n")
+        }
+        return result
     }
 }
