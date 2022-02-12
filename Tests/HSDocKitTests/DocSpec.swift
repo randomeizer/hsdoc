@@ -46,8 +46,8 @@ class DocSpec: QuickSpec {
                     Doc.function(
                         signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
-                        parameters: .init(ListItem("None")),
-                        returns: .init(ListItem("Nothing"))
+                        parameters: .init(BulletItem("None")),
+                        returns: .init(BulletItem("Nothing"))
                     )
                 }
 
@@ -82,13 +82,13 @@ class DocSpec: QuickSpec {
                             .init("This is a description", "over two lines.")
                         ),
                         parameters: .init(
-                            ListItem("a - first param", "with multi-line description."),
-                            ListItem("b - optional param.")
+                            BulletItem("a - first param", "with multi-line description."),
+                            BulletItem("b - optional param.")
                         ),
-                        returns: .init(ListItem("a number."), ListItem("a boolean.")),
+                        returns: .init(BulletItem("a number."), BulletItem("a boolean.")),
                         notes: .init(
-                            ListItem("a note."),
-                            ListItem("another note.")
+                            BulletItem("a note."),
+                            BulletItem("another note.")
                         )
                     )
                 }
@@ -195,8 +195,8 @@ class DocSpec: QuickSpec {
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
                         description: .init("Description."),
                         notes: .init(
-                            ListItem("One"),
-                            ListItem("Two")
+                            BulletItem("One"),
+                            BulletItem("Two")
                         )
                     )
                 } leaving: {
@@ -262,8 +262,8 @@ class DocSpec: QuickSpec {
                     Doc.method(
                         signature: .init(module: .init("foo"), name: "bar"),
                         description: .init("This is a description."),
-                        parameters: .init(ListItem("None")),
-                        returns: .init(ListItem("Nothing"))
+                        parameters: .init(BulletItem("None")),
+                        returns: .init(BulletItem("Nothing"))
                     )
                 }
                 
@@ -297,16 +297,16 @@ class DocSpec: QuickSpec {
                         ),
                         description: .init("This is a description","over two lines."),
                         parameters: .init(
-                            ListItem("a - first param."),
-                            ListItem("b - optional param.")
+                            BulletItem("a - first param."),
+                            BulletItem("b - optional param.")
                         ),
                         returns: .init(
-                            ListItem("a number."),
-                            ListItem("a boolean.")
+                            BulletItem("a number."),
+                            BulletItem("a boolean.")
                         ),
                         notes: .init(
-                            ListItem("a note."),
-                            ListItem("another note.")
+                            BulletItem("a note."),
+                            BulletItem("another note.")
                         )
                     )
                 }
@@ -348,8 +348,8 @@ class DocSpec: QuickSpec {
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
                         description: .init("Description."),
                         notes: .init(
-                            ListItem("One"),
-                            ListItem("Two")
+                            BulletItem("One"),
+                            BulletItem("Two")
                         )
                     )
                 } leaving: {

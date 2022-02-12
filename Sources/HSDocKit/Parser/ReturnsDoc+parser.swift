@@ -9,6 +9,6 @@ extension ReturnsDoc {
             LintError.expected("blank line before Returns")
         }
         DocLine("Returns:")
-        List.parser
+        BulletList.parser
     }
 }

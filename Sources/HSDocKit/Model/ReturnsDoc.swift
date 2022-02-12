@@ -2,22 +2,22 @@
 public struct ReturnsDoc: Equatable {
 
     /// The list of `ListItem`s describing the return values.
-    public let items: List
+    public let items: BulletList
     
-    /// Constructs a new `ReturnsDoc` with the specified list of `ListItem`s.
+    /// Constructs a new `ReturnsDoc` with the specified list of `BulletItem`s.
     ///
-    /// - Parameter items: The list of `ListItem`s describing the return values.
-    public init(items: List) {
+    /// - Parameter items: The list of `BulletItem`s describing the return values.
+    public init(items: BulletList) {
         self.items = items
     }
     
-    /// Constructs a new `ReturnsDoc` with the specified list of `ListItem`s.
+    /// Constructs a new `ReturnsDoc` with the specified list of `BulletItem`s.
     ///
     /// - Parameters:
-    ///   - head: The first `ListItem`.
-    ///   - tail: Additional `ListItem`s.
-    public init(_ head: ListItem, _ tail: ListItem...) {
-        var items = List(head)
+    ///   - head: The first `BulletItem`.
+    ///   - tail: Additional `BulletItem`s.
+    public init(_ head: BulletItem, _ tail: BulletItem...) {
+        var items = BulletList(head)
         items.append(contentsOf: tail)
         self.items = items
     }

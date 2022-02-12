@@ -4,9 +4,9 @@ import Nimble
 
 class ListItemSpec: QuickSpec {
     override func spec() {
-        describe("ListItem") {
+        describe("BulletItem") {
             context("parser") {
-                let parser = ListItem.parser
+                let parser = BulletItem.parser
                 
                 itParses("simple list item", with: parser) {
                     TextDocument {
@@ -15,7 +15,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem("a list item."[...])
+                    BulletItem("a list item."[...])
                 }
                 
                 itParses("multi-line list item", with: parser) {
@@ -26,7 +26,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem(
+                    BulletItem(
                         "a list item",
                         "with multiple lines"
                     )
@@ -40,7 +40,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem(
+                    BulletItem(
                         lines: .init("a list item"),
                         items: .init(
                             .init("a sub-item")
@@ -58,7 +58,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem(
+                    BulletItem(
                         lines: .init("a list item"),
                         items: .init(
                             .init(
@@ -83,7 +83,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem("a list item")
+                    BulletItem("a list item")
                 }
                 
                 itFailsParsing("excess indenting", with: parser) {
@@ -109,7 +109,7 @@ class ListItemSpec: QuickSpec {
                     """
                     }
                 } to: {
-                    ListItem("a list item")
+                    BulletItem("a list item")
                 } leaving: {
                     TextDocument(firstLine: 2) {
                     """

@@ -7,9 +7,9 @@ import CustomDump
 class TextSpec: QuickSpec {
     override func spec() {
         describe("text") {
-            context("ListItem") {
+            context("BulletItem") {
                 it("outputs a single line") {
-                    let value = ListItem("one")
+                    let value = BulletItem("one")
                     
                     expect(value.text(for: .lua)).to(equal(
                         "one"
@@ -17,7 +17,7 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs multiple lines") {
-                    let value = ListItem(
+                    let value = BulletItem(
                         "one", "two", "three"
                     )
                     
@@ -33,8 +33,8 @@ class TextSpec: QuickSpec {
             
             context("List") {
                 it("outputs a single one line item") {
-                    let value = List(
-                        ListItem("one")
+                    let value = BulletList(
+                        BulletItem("one")
                     )
                     
                     expect(value.text(for: .lua)).to(equal(
@@ -45,8 +45,8 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs a single multiline item") {
-                    let value = List(
-                        ListItem("one", "two", "three")
+                    let value = BulletList(
+                        BulletItem("one", "two", "three")
                     )
                     
                     XCTAssertNoDifference(
@@ -60,10 +60,10 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs a multiple singleline items") {
-                    let value = List(
-                        ListItem("one"),
-                        ListItem("two"),
-                        ListItem("three")
+                    let value = BulletList(
+                        BulletItem("one"),
+                        BulletItem("two"),
+                        BulletItem("three")
                     )
                     
                     XCTAssertNoDifference(
@@ -77,10 +77,10 @@ class TextSpec: QuickSpec {
                 }
                 
                 it("outputs a multiple multiline items") {
-                    let value = List(
-                        ListItem("alpha", "beta"),
-                        ListItem("one", "two"),
-                        ListItem("three")
+                    let value = BulletList(
+                        BulletItem("alpha", "beta"),
+                        BulletItem("one", "two"),
+                        BulletItem("three")
                     )
                     
                     XCTAssertNoDifference(
@@ -128,7 +128,7 @@ class TextSpec: QuickSpec {
             context("ParametersDoc") {
                 it("outputs a single return value") {
                     let value = ParametersDoc(
-                        ListItem("one")
+                        BulletItem("one")
                     )
                     
                     XCTAssertNoDifference(
@@ -143,8 +143,8 @@ class TextSpec: QuickSpec {
                 
                 it("outputs multiple return values") {
                     let value = ParametersDoc(
-                        ListItem("one"),
-                        ListItem("two")
+                        BulletItem("one"),
+                        BulletItem("two")
                     )
                     
                     XCTAssertNoDifference(
@@ -162,7 +162,7 @@ class TextSpec: QuickSpec {
             context("ReturnsDoc") {
                 it("outputs a single return value") {
                     let value = ReturnsDoc(
-                        ListItem("one")
+                        BulletItem("one")
                     )
                     
                     XCTAssertNoDifference(
@@ -177,8 +177,8 @@ class TextSpec: QuickSpec {
                 
                 it("outputs multiple return values") {
                     let value = ReturnsDoc(
-                        ListItem("one"),
-                        ListItem("two")
+                        BulletItem("one"),
+                        BulletItem("two")
                     )
                     
                     XCTAssertNoDifference(
@@ -196,7 +196,7 @@ class TextSpec: QuickSpec {
             context("NotesDoc") {
                 it("outputs a single return value") {
                     let value = NotesDoc(
-                        ListItem("one")
+                        BulletItem("one")
                     )
                     
                     XCTAssertNoDifference(
@@ -211,8 +211,8 @@ class TextSpec: QuickSpec {
                 
                 it("outputs multiple return values") {
                     let value = NotesDoc(
-                        ListItem("one"),
-                        ListItem("two")
+                        BulletItem("one"),
+                        BulletItem("two")
                     )
                     
                     XCTAssertNoDifference(

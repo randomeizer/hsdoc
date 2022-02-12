@@ -9,6 +9,6 @@ extension ParametersDoc {
             LintError.expected("blank line before Parameters")
         }
         DocLine("Parameters:")
-        List.parser
+        BulletList.parser
     }
 }

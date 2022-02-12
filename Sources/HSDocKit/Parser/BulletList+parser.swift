@@ -1,10 +1,10 @@
 import Parsing
 
-extension List {
+extension BulletList {
     
     /// Parses a list of ``ListItem``s.
     static let parser = OneOrMore {
-        ListItem.parser
+        BulletItem.parser
     } terminator: {
         blankDocLineOrEnd
     }

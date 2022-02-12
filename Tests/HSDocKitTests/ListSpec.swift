@@ -5,7 +5,7 @@ import Nimble
 class ListSpec: QuickSpec {
     override func spec() {
         describe("List") {
-            let parser = List.parser
+            let parser = BulletList.parser
             
             itParses("single item", with: parser) {
                 TextDocument {
@@ -14,7 +14,7 @@ class ListSpec: QuickSpec {
                 """
                 }
             } to: {
-                List(
+                BulletList(
                     .init("list item")
                 )
             }
@@ -27,7 +27,7 @@ class ListSpec: QuickSpec {
                 """
                 }
             } to: {
-                List(
+                BulletList(
                     .init("list item"),
                     .init("another item")
                 )
@@ -43,7 +43,7 @@ class ListSpec: QuickSpec {
                 """
                 }
             } to: {
-                List(
+                BulletList(
                     .init(
                         "list item",
                         "with second line"
@@ -68,8 +68,8 @@ class ListSpec: QuickSpec {
                 """
                 }
             } to: {
-                List(
-                    ListItem(
+                BulletList(
+                    BulletItem(
                         lines: .init("list item"),
                         items: .init(
                             .init("sub-item 1"),
@@ -79,7 +79,7 @@ class ListSpec: QuickSpec {
                             )
                         )
                     ),
-                    ListItem(
+                    BulletItem(
                         lines: .init("another item"),
                         items: .init(
                             .init("sub-item 3"),

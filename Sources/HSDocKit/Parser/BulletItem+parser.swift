@@ -1,13 +1,13 @@
 import Parsing
 
-extension ListItem {
+extension BulletItem {
     /// Creates a `Parser` for list items.
-    static let parser = Parsers.ListItemParser()
+    static let parser = Parsers.BulletItemParser()
 }
 
 extension Parsers {
     /// Parses a 'list item' line, along with any following lines which are sub-elements of the item, due to indentation.
-    struct ListItemParser: Parser
+    struct BulletItemParser: Parser
     {
         public let indent: String
         
@@ -15,7 +15,7 @@ extension Parsers {
             self.indent = indent
         }
         
-        func parse(_ input: inout TextDocument) throws -> ListItem {
+        func parse(_ input: inout TextDocument) throws -> BulletItem {
             var inputCopy = input
             let listItemFirstLine = DocLine {
                 Skip { indent }
@@ -48,7 +48,7 @@ extension Parsers {
             lines.append(contentsOf: subLines)
             
             input = inputCopy
-            return ListItem(lines: lines, items: subItems)
+            return BulletItem(lines: lines, items: subItems)
         }
     }
 }

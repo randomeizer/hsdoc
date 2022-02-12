@@ -9,6 +9,6 @@ extension NotesDoc {
             LintError.expected("blank line before Notes")
         }
         DocLine("Notes:")
-        List.parser
+        BulletList.parser
     }
 }
