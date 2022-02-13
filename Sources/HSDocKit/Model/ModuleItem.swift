@@ -131,3 +131,22 @@ extension ModuleItem: CustomStringConvertible {
         text(for: .lua)
     }
 }
+
+extension ModuleItem {
+    public var moduleSignature: ModuleSignature? {
+        switch self {
+        case let .constant(signature: signature, deprecated: _, description: _, notes: _):
+            return signature.module
+        case let .constructor(signature: signature, deprecated: _, description: _, parameters: _, returns: _, notes: _):
+            return signature.module
+        case let .field(signature: signature, deprecated: _, description: _, notes: _):
+            return signature.module
+        case let .function(signature: signature, deprecated: _, description: _, parameters: _, returns: _, notes: _):
+            return signature.module
+        case let .method(signature: signature, deprecated: _, description: _, parameters: _, returns: _, notes: _):
+            return signature.module
+        case let .variable(signature: signature, deprecated: _, description: _, notes: _):
+            return signature.module
+        }
+    }
+}

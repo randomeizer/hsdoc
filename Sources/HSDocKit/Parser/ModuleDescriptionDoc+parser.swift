@@ -1,6 +1,6 @@
 import Parsing
 
-extension ModuleDescriptionDoc {
+extension ModuleDetailsDoc {
     static let parser = OneOrMore {
         blankDocLine
         ParagraphDoc.parser

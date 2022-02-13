@@ -17,8 +17,9 @@ extension DocBlock: CustomStringConvertible {
     public var description: String {
         """
         
-        line \(lineNumber):
+        {line: \(lineNumber); text:
         \(doc)
+        }
         """
     }
 }

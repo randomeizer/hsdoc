@@ -73,7 +73,7 @@ class DocsSpec: QuickSpec {
                         """
                         --- === my.module ===
                         ---
-                        --- Module description.
+                        --- Module details.
 
                         local foo = require("foo")
 
@@ -81,7 +81,7 @@ class DocsSpec: QuickSpec {
 
                         --- my.module.funcWithReturn(a, b) -> boolean
                         --- Function
-                        --- Function description.
+                        --- Function details.
                         ---
                         --- Parameters:
                         ---  * a - a parameter.
@@ -95,13 +95,16 @@ class DocsSpec: QuickSpec {
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
-                            name: .init("my", "module"), description: .init(.init("Module description."))
+                            name: .init("my", "module"),
+                            details: .init(
+                                "Module details."
+                            )
                         )),
                         .init(lineNumber: 9, doc: .item(.function(
                             signature: .init(module: .init("my", "module"), name: "funcWithReturn",
                                              parameters: [.init(name: "a"), .init(name: "b")],
                                              returns: [.init("boolean")]),
-                            description: .init("Function description."),
+                            description: .init("Function details."),
                             parameters: .init(.init("a - a parameter."), .init("b - another parameter.")),
                             returns: .init(.init("`true` if some condition is met.")),
                             notes: nil))),
@@ -182,9 +185,9 @@ class DocsSpec: QuickSpec {
                     [
                         .init(lineNumber: 1, doc: .module(
                             name: .init("my", "module"),
-                            description: .init(
-                                .init("Module description."),
-                                .init("A second line of description.")
+                            details: .init(
+                                "Module description.",
+                                "A second line of description."
                             )
                         )),
                         .init(lineNumber: 11, doc: .item(.function(
@@ -222,6 +225,14 @@ class DocsSpec: QuickSpec {
                             description: .init("A `table` containing `string`s.")
                         )))
                     ]
+                } leaving: {
+                    TextDocument(firstLine: 59) {
+                    """
+                    function mod.lazy.value:field()
+                        return {"one", "two", "three"}
+                    end
+                    """
+                    }
                 }
                 
                 itParses("global functions and vars", with: parser) {

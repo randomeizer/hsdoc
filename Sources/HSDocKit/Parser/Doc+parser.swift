@@ -16,9 +16,13 @@ where P: Parser, P.Input == Substring
 
 extension Doc {
     /// Parses a ``Doc`` from a ``Substring``
-    static let parser = OneOf {
-        moduleParser
-        itemParser
+    static let parser = Try {
+        OneOf {
+            moduleParser
+            itemParser
+        }
+    } catch: { error in
+        Doc.error(message: "\(error)")
     }
     
     /// Parses a 'Module'
@@ -28,7 +32,7 @@ extension Doc {
             ModuleSignature.nameParser
             " ==="
         }
-        ModuleDescriptionDoc.parser
+        ModuleDetailsDoc.parser
     }
     
     static let itemParser = Parse(Self.item) {

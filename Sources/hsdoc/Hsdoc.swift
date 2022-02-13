@@ -24,7 +24,7 @@ struct Hsdoc: ParsableCommand {
     var searchDirs: [String] = []
     
     @Option(name: .shortAndLong, help: "The output filename.")
-    var output: String
+    var output: String?
     
     @Flag(help: "Output additional details while processing.")
     var noisy: Bool = false
@@ -41,6 +41,8 @@ struct Hsdoc: ParsableCommand {
 
         let parsedDocs = parseFiles(in: searchDirs)
         let output = processDocs(in: parsedDocs)
+        
+        debug("Output:\n\(output)")
     }
     
     func parseFiles(in directories: [String]) -> [String:Docs] {
@@ -89,9 +91,9 @@ struct Hsdoc: ParsableCommand {
         for (filename, docs) in parsedDocs {
             for docBlock in docs {
                 switch docBlock.doc {
-                case let .module(name: name, description: _):
+                case let .module(name: name, details: _):
                     if moduleSet[name] != nil {
-                        err("Duplicate module defined in '\(filename)': \(name)")
+                        err("Duplicate module defined in '\(filename)' (line \(docBlock.lineNumber)): \(name)")
                     } else {
                         guard let module = Module(doc: docBlock.doc) else {
                             err("Unexpected error occurred while initialising a module.")
@@ -99,10 +101,18 @@ struct Hsdoc: ParsableCommand {
                         }
                         moduleSet[name] = module
                         modules.append(module)
+                        #warning("TODO: Add this module as a submodule of the parent module")
                     }
                 case .item(let item):
-                    #warning("unimplemented")
-                    break
+                    if let moduleSignature = item.moduleSignature,
+                       let module = moduleSet[moduleSignature]
+                    {
+                        module.items.append(item)
+                    } else {
+                        err("Unable to find required module for item in '\(filename)' (line \(docBlock.lineNumber)): \(item.moduleSignature?.description ?? "<none>")")
+                    }
+                case .error(message: let message):
+                    err("Parsing error in '\(filename)' (line \(docBlock.lineNumber): \(message)")
                 }
             }
         }

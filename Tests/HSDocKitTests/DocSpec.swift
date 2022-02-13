@@ -14,13 +14,13 @@ class DocSpec: QuickSpec {
                     """
                     --- === foo.bar ===
                     ---
-                    --- Description.
+                    --- Details.
                     """
                     }
                 } to: {
                     Doc.module(
                         name: .init("foo", "bar"),
-                        description: .init(.init("Description."))
+                        details: .init(.init("Details."))
                     )
                 }
             }

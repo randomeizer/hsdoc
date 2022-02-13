@@ -13,23 +13,27 @@ public enum Doc: Equatable {
     
     case module(
         name: ModuleSignature,
-        description: ModuleDescriptionDoc
+        details: ModuleDetailsDoc
     )
 
     case item(ModuleItem)
+    
+    case error(message: String)
 }
 
 extension Doc: CustomStringConvertible {
     func text(for prefix: Prefix) -> String {
         switch self {
-        case let .module(name: name, description: description):
+        case let .module(name: name, details: details):
             return """
             \(prefix) === \(name) ===
             \(prefix)
-            \(description.text(for: prefix))
+            \(details.text(for: prefix))
             """
         case let .item(item):
             return item.text(for: prefix)
+        case let .error(message: message):
+            return message
         }
     }
     

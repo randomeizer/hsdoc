@@ -8,19 +8,19 @@ public class Module {
     public let name: ModuleSignature
     
     /// The documentation for the ``Module``.
-    public let description: ModuleDescriptionDoc
+    public let details: ModuleDetailsDoc
     
-    public init(name: ModuleSignature, description: ModuleDescriptionDoc) {
+    public init(name: ModuleSignature, details: ModuleDetailsDoc) {
         self.name = name
-        self.description = description
+        self.details = details
     }
     
     public convenience init?(doc: Doc) {
-        guard case let .module(name: name, description: description) = doc else {
+        guard case let .module(name: name, details: details) = doc else {
             return nil
         }
         
-        self.init(name: name, description: description)
+        self.init(name: name, details: details)
     }
     
     /// The list of all items (fields/variables/methods/etc) for the module.
@@ -72,5 +72,18 @@ public class Module {
                 return false
             }
         }
+    }
+}
+
+extension Module: CustomStringConvertible {
+    public var description: String {
+        """
+        
+        ============================
+        Module: \(name)
+        Items:
+        \(items.map { $0.description }.joined(separator: "\n\n"))
+        ============================
+        """
     }
 }
