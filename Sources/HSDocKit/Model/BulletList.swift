@@ -1,9 +1,9 @@
 import NonEmpty
 
-/// A list of `ListItem`s with at least one item.
-public typealias List = NonEmpty<[ListItem]>
+/// A list of `BulletItem`s with at least one item.
+public typealias BulletList = NonEmpty<[BulletItem]>
 
-extension List {
+extension BulletList {
     func text(for prefix: Doc.Prefix) -> String {
         let separator = "\(prefix)  * "
         

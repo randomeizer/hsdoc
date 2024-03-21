@@ -2,13 +2,13 @@ import Parsing
 
 extension NotesDoc {
     /// Parses a ``NotesDoc`` from a ``Substring``
-    /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<TextDocument, NotesDoc> {
-        Parse(NotesDoc.init(items:)) {
-            blankDocLines
-            DocLine("Notes:")
-            List.parser()
+    static let parser = Parse(NotesDoc.init(items:)) {
+        Try {
+            blankDocLine
+        } catch: { error in
+            throw LintError.expected("blank line before Notes")
         }
-        .eraseToAnyParser()
+        DocLine("Notes:")
+        BulletList.parser
     }
 }

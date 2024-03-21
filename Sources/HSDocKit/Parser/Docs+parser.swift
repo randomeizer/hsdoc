@@ -1,53 +1,50 @@
 import Parsing
 
-/// A collection of ``Doc`` values.
-typealias Docs = [DocBlock]
+/// Describes a parsed block of documentation mixed into other file content (eg. code).
+public struct DocBlock: Equatable {
+    /// The line number the block started on.
+    public let lineNumber: UInt
+    
+    /// The documentation in the block.
+    public let doc: Doc
+}
 
-extension Docs {
-    /// Parses a ``Docs`` value from a ``Substring``
-    /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<TextDocument, Docs> {
-        Many {
-            DocBlock.parser()
+extension DocBlock {
+    public static let parser = Parsers.DocBlockParser()
+}
+
+extension DocBlock: CustomStringConvertible {
+    public var description: String {
+        """
+        
+        {line: \(lineNumber); text:
+        \(doc)
         }
-        .eraseToAnyParser()
+        """
     }
 }
 
-/// Describes a parsed block of documentation mixed into other file content (eg. code).
-struct DocBlock: Equatable {
-    /// The line number the block started on.
-    let lineNumber: UInt
-    
-    /// The documentation in the block.
-    let doc: Doc
-}
-
 extension Parsers {
-    struct DocBlockParser: Parser {
-        func parse(_ input: inout TextDocument) -> DocBlock? {
+    public struct DocBlockParser: Parser {
+        public func parse(_ input: inout TextDocument) throws -> DocBlock {
             let original = input
-            guard NonDocLines().parse(&input) != nil else {
-                return nil
-            }
+            
+            _ = NonDocLines().parse(&input)
             
             guard let firstLineNumber = input.first?.number else {
                 input = original
-                return nil
+                throw LintError.expected("a line of text")
             }
             
-            guard let doc = Doc.parser().parse(&input) else {
+            let doc: Doc
+            do {
+                doc = try Doc.parser.parse(&input)
+            } catch {
                 input = original
-                return nil
+                throw error
             }
             
             return .init(lineNumber: firstLineNumber, doc: doc)
         }
-    }
-}
-
-extension DocBlock {
-    static func parser() -> Parsers.DocBlockParser {
-        Parsers.DocBlockParser()
     }
 }

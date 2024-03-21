@@ -4,7 +4,7 @@ import Nimble
 @testable import HSDocKit
 
 class TextDocumentSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("TextDocument") {
             context("parser") {
                 let parser = TextDocument.parser()

@@ -5,42 +5,28 @@
 //  Created by David Peterson on 31/12/21.
 //
 
-import Foundation
-import NonEmpty
 import Parsing
 
 // Parsers for whitespace
-let optionalSpace = Prefix(minLength: 0, maxLength: 1, while: { $0 == " " })
-let optionalSpaces = Prefix(minLength: 0, while: { $0 == " " })
-let oneOrMoreSpaces = Prefix(minLength: 1, while: { $0 == " " })
+let optionalSpace = Prefix<Substring>(0...1) { $0 == " " }
+let optionalSpaces = Prefix<Substring>(0...) { $0 == " " }
+let oneOrMoreSpaces = Prefix<Substring>(1...) { $0 == " " }
 
-// Parsers for newlines
-let optionalNewline = Prefix(minLength: 0, maxLength: 1, while: {$0 == "\n" })
-let nonNewlineCharacters = Prefix { $0 != "\n" }
-
-let itemPathSeparator: Character = "."
-let methodPathSeparator: Character = ":"
+let nonBlank = Parse {
+    Check {
+        optionalSpaces
+        Prefix(1)
+    } orThrow: { _, _ in
+        LintError.expected("at least one non-whitespace character")
+    }
+    Rest()
+}
 
 // Parses comma separators, allowing for optional spaces either side.
 let commaSeparator = Parse {
-    Skip(optionalSpaces)
+    Skip { optionalSpaces }
     ","
-    Skip(optionalSpaces)
-}
-
-// Parses documentation comment prefixes, including a single optional space.
-let docPrefix = Parse {
-    OneOf {
-        Parse { // ObjC
-            "///"
-            Not { "/" }
-        }
-        Parse { // Lua
-            "---"
-            Not { "-" }
-        }
-    }
-    Skip(optionalSpace)
+    Skip { optionalSpaces }
 }
 
 /// Parses if the next input is either a `"\n"` or there is no further input.
@@ -49,37 +35,31 @@ let endOfLineOrInput = OneOf {
     End()
 }
 
+let blankDocLine = Require {
+    DocLine {
+        Skip { optionalSpaces }
+    }
+} orThrow: {
+    LintError.expected("a blank documentation line")
+}
+
 // Parses at least one blank documentation line ("///")
-let blankDocLines = Skip(OneOrMore { DocLine("") })
-
-// MARK: Doc
-
-struct NonDocLine: Parser {
-    func parse(_ input: inout TextDocument) -> Void? {
-        guard let firstLine = input.first else {
-            return nil
-        }
-        
-        var text = firstLine.text
-        
-        guard docPrefix.parse(&text) == nil else {
-            return nil
-        }
-        
-        input = input.dropFirst()
-        return ()
+let blankDocLines = Skip {
+    OneOrMore {
+        blankDocLine
     }
 }
 
-struct NonDocLines: Parser {
-    func parse(_ input: inout TextDocument) -> UInt? {
-        let nonDocLine = NonDocLine()
-        var count: UInt = 0
-        
-        while nonDocLine.parse(&input) != nil {
-            count = count + 1
-        }
-        
-        return count
+/// matches either one or more blank doc lines, a non-doc line, or the end of input.
+let blankDocLineOrEnd = Check {
+    OneOf {
+        blankDocLine
+        NonDocLine()
+        End<TextDocument>()
     }
+} orThrow: {
+    LintError.expected("blank documentation line or end of documentation block")
 }
+
+/// matches any doc line with at least one non-whitespace character after the prefix.
+let nonBlankDocLine = DocLine { nonBlank }

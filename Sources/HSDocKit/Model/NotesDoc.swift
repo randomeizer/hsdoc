@@ -1,11 +1,11 @@
 /// The list of `Notes` for the item.
 public struct NotesDoc: Equatable {
     /// The items in the list of notes.
-    public let items: List
+    public let items: BulletList
     
     /// Creates a new `NotesDoc` with the specified list of items.
     /// - Parameter items: The items in the notes.
-    public init(items: List) {
+    public init(items: BulletList) {
         self.items = items
     }
     
@@ -13,8 +13,8 @@ public struct NotesDoc: Equatable {
     /// - Parameters:
     ///   - head: The first item (required)
     ///   - tail: The remaining items (optional)
-    public init(_ head: ListItem, _ tail: ListItem...) {
-        var items = List(head)
+    public init(_ head: BulletItem, _ tail: BulletItem...) {
+        var items = BulletList(head)
         items.append(contentsOf: tail)
         self.items = items
     }

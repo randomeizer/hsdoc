@@ -2,13 +2,13 @@ import Parsing
 
 extension ReturnsDoc {
     /// Parses a ``ReturnsDoc`` from a ``Substring``.
-    /// - Returns: The ``Parser``
-    static func parser() -> AnyParser<TextDocument, ReturnsDoc> {
-        Parse(ReturnsDoc.init(items:)) {
-            blankDocLines
-            DocLine("Returns:")
-            List.parser()
+    static let parser = Parse(ReturnsDoc.init(items:)) {
+        Require {
+            blankDocLine
+        } orThrow: {
+            LintError.expected("blank line before Returns")
         }
-        .eraseToAnyParser()
+        DocLine("Returns:")
+        BulletList.parser
     }
 }

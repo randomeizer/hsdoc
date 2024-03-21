@@ -1,7 +1,7 @@
 import Parsing
 
 /// A document consisting of multiple lines of text.
-typealias TextDocument = ArraySlice<TextLine>
+public typealias TextDocument = ArraySlice<TextLine>
 
 //extension DocBlock {
 //    func parser<Input>() -> Parsers.DocBlockParser<Input> where Input: StringProtocol {
@@ -30,13 +30,13 @@ extension TextDocument {
     ///
     /// - Parameter firstLine: The for the first line in the text input. Defaults to `1`.
     /// - Returns: The ``Parser``
-    static func parser(firstLine: UInt = 1) -> Parser.TextDocumentParser {
+    public static func parser(firstLine: UInt = 1) -> Parser.TextDocumentParser {
         Parser.TextDocumentParser(firstLine: firstLine)
     }
 }
 
 extension Parsers {
-    struct TextDocumentParser: Parser {
+    public struct TextDocumentParser: Parser {
         
         let firstLine: UInt
         
@@ -44,7 +44,7 @@ extension Parsers {
             self.firstLine = firstLine
         }
         
-        func parse(_ input: inout Substring) -> TextDocument? {
+        public func parse(_ input: inout Substring) -> TextDocument? {
             var result = TextDocument()
             
             var lineNumber = firstLine
@@ -61,25 +61,25 @@ extension Parsers {
 }
 
 extension Parser {
-    typealias TextDocumentParser = Parsers.TextDocumentParser
+    public typealias TextDocumentParser = Parsers.TextDocumentParser
 }
 
 extension TextDocument {
-    init(firstLine: UInt = 1, content: Substring) {
+    public init(firstLine: UInt = 1, content: Substring) {
         let parser = Self.parser(firstLine: firstLine)
         var input = content
         self = parser.parse(&input)!
     }
     
-    init(firstLine: UInt = 1, content: String) {
+    public init(firstLine: UInt = 1, content: String) {
         self.init(firstLine: firstLine, content: content[...])
     }
     
-    init(firstLine: UInt = 1, content: () -> Substring) {
+    public init(firstLine: UInt = 1, content: () -> Substring) {
         self.init(firstLine: firstLine, content: content())
     }
     
-    init(firstLine: UInt = 1, content: () -> String) {
+    public init(firstLine: UInt = 1, content: () -> String) {
         self.init(firstLine: firstLine, content: content())
     }
 }
