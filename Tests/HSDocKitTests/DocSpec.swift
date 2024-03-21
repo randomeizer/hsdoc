@@ -4,12 +4,12 @@ import CustomDump
 @testable import HSDocKit
 
 class DocSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Doc") {
             context("module") {
                 let parser = Doc.moduleParser
                 
-                itParses("module with docs", with: parser) {
+                itParses("module with docs") {
                     TextDocument {
                     """
                     --- === foo.bar ===
@@ -17,6 +17,8 @@ class DocSpec: QuickSpec {
                     --- Details.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     Doc.module(
                         name: .init("foo", "bar"),

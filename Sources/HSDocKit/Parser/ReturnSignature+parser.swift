@@ -12,6 +12,7 @@ extension ReturnSignature {
         LintError.expected("a return type")
     }
     .map(ReturnSignature.init)
+    .eraseToAnyParser()
     
     /// Parses a list of return signature values.
     public static let listParser = Many {

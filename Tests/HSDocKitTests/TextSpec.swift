@@ -5,7 +5,7 @@ import CustomDump
 @testable import HSDocKit
 
 class TextSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("text") {
             context("BulletItem") {
                 it("outputs a single line") {

@@ -17,4 +17,5 @@ extension FunctionSignature {
         }
         End()
     }
+    .eraseToAnyParser()
 }

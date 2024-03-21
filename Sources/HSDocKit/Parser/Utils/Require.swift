@@ -1,15 +1,15 @@
 import Parsing
 
-/// Attempts to parse the `upstream` ``Parser``. If it fails, the `or` closure
+/// Attempts to parse the `upstream` ``Parser``. If it fails, the `orThrow` closure
 /// is called, allowing the error to be handled and transformed into a new ``Error``.
-public struct Require<Upstream>: Parser
-where Upstream: Parser
+public struct Require<Input, Output, Upstream>: Parser
+where Upstream: Parser, Input == Upstream.Input, Output == Upstream.Output
 {
     public let upstream: Upstream
     public let fail: (Error, inout Upstream.Input) -> Error
     
     @inlinable
-    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping (Error, inout Upstream.Input) -> Error) {
+    public init(@ParserBuilder<Upstream.Input> _ upstream: () -> Upstream, orThrow fail: @escaping (Error, inout Upstream.Input) -> Error) {
         self.upstream = upstream()
         self.fail = fail
     }
@@ -26,14 +26,14 @@ where Upstream: Parser
 
 extension Require {
     @inlinable
-    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping (inout Upstream.Input) -> Error) {
+    public init(@ParserBuilder<Upstream.Input> _ upstream: () -> Upstream, orThrow fail: @escaping (inout Upstream.Input) -> Error) {
         self.init(upstream) { _, input in
             fail(&input)
         }
     }
     
     @inlinable
-    public init(@ParserBuilder _ upstream: () -> Upstream, orThrow fail: @escaping () -> Error) {
+    public init(@ParserBuilder<Upstream.Input> _ upstream: () -> Upstream, orThrow fail: @escaping () -> Error) {
         self.init(upstream) { _, _ in
             fail()
         }

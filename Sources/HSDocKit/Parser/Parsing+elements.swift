@@ -8,9 +8,9 @@
 import Parsing
 
 // Parsers for whitespace
-let optionalSpace = Prefix(0...1) { $0 == " " }
-let optionalSpaces = Prefix(0...) { $0 == " " }
-let oneOrMoreSpaces = Prefix(1...) { $0 == " " }
+let optionalSpace = Prefix<Substring>(0...1) { $0 == " " }
+let optionalSpaces = Prefix<Substring>(0...) { $0 == " " }
+let oneOrMoreSpaces = Prefix<Substring>(1...) { $0 == " " }
 
 let nonBlank = Parse {
     Check {

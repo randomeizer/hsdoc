@@ -3,11 +3,11 @@ import Nimble
 @testable import HSDocKit
 
 class NonDocLinesSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("NonDocLines") {
             let parser = NonDocLines()
             
-            itParses("two lines", with: parser) {
+            itParses("two lines") {
                 TextDocument {
                     """
                     line 1
@@ -15,6 +15,8 @@ class NonDocLinesSpec: QuickSpec {
                     --- line 3
                     """
                 }
+            } with: {
+                parser
             } to: {
                 2
             } leaving: {
@@ -23,10 +25,12 @@ class NonDocLinesSpec: QuickSpec {
                 }
             }
             
-            itParses("doc lines", with: parser) {
+            itParses("doc lines") {
                 TextDocument {
                     "--- doc line"
                 }
+            } with: {
+                parser
             } to: {
                 0
             } leaving: {

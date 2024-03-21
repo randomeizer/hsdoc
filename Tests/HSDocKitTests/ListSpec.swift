@@ -3,29 +3,33 @@ import Nimble
 @testable import HSDocKit
 
 class ListSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("List") {
             let parser = BulletList.parser
             
-            itParses("single item", with: parser) {
+            itParses("single item") {
                 TextDocument {
                 """
                 ---  * list item
                 """
                 }
+            } with: {
+                parser
             } to: {
                 BulletList(
                     .init("list item")
                 )
             }
             
-            itParses("two items", with: parser) {
+            itParses("two items") {
                 TextDocument {
                 """
                 ---  * list item
                 ---  * another item
                 """
                 }
+            } with: {
+                parser
             } to: {
                 BulletList(
                     .init("list item"),
@@ -33,7 +37,7 @@ class ListSpec: QuickSpec {
                 )
             }
             
-            itParses("multiline items", with: parser) {
+            itParses("multiline items") {
                 TextDocument {
                 """
                 ---  * list item
@@ -42,6 +46,8 @@ class ListSpec: QuickSpec {
                 ---    with second line
                 """
                 }
+            } with: {
+                parser
             } to: {
                 BulletList(
                     .init(
@@ -55,7 +61,7 @@ class ListSpec: QuickSpec {
                 )
             }
             
-            itParses("sub-items", with: parser) {
+            itParses("sub-items") {
                 TextDocument {
                 """
                 ---  * list item
@@ -67,6 +73,8 @@ class ListSpec: QuickSpec {
                 ---    * sub-item 4
                 """
                 }
+            } with: {
+                parser
             } to: {
                 BulletList(
                     BulletItem(
@@ -89,7 +97,7 @@ class ListSpec: QuickSpec {
                 )
             }
             
-            itFailsParsing("unindented second line", with: parser) {
+            itFailsParsing("unindented second line") {
                 TextDocument {
                 """
                 ---  * item 1
@@ -97,6 +105,8 @@ class ListSpec: QuickSpec {
                 ---  * item 2
                 """
                 }
+            } with: {
+                parser
             } withErrorMessage: {
                 """
                 error: unexpected input

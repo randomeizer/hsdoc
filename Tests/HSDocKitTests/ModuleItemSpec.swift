@@ -4,7 +4,7 @@ import Quick
 @testable import HSDocKit
 
 class ModuleItemSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("ModuleItem") {
             context("parser") {
                 let parser = ModuleItem.parser
@@ -13,7 +13,7 @@ class ModuleItemSpec: QuickSpec {
             context("function") {
                 let parser = ModuleItem.functionParser
                 
-                itParses("simple function", with: parser) {
+                itParses("simple function") {
                     TextDocument {
                     """
                     /// foo.bar()
@@ -27,6 +27,8 @@ class ModuleItemSpec: QuickSpec {
                     ///  * Nothing
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.function(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -36,7 +38,7 @@ class ModuleItemSpec: QuickSpec {
                     )
                 }
 
-                itParses("full function", with: parser) {
+                itParses("full function") {
                     TextDocument {
                     """
                     --- foo.boo.bar(a, [b]) -> number, boolean
@@ -58,6 +60,8 @@ class ModuleItemSpec: QuickSpec {
                     ---  * another note.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.function(
                         signature: .init(module: .init("foo", "boo"), name: "bar",
@@ -78,7 +82,7 @@ class ModuleItemSpec: QuickSpec {
                     )
                 }
                 
-                itFailsParsing("missing parameters", with: parser) {
+                itFailsParsing("missing parameters") {
                     TextDocument {
                     """
                     --- foo.bar(a)
@@ -86,6 +90,8 @@ class ModuleItemSpec: QuickSpec {
                     --- Description.
                     """
                     }
+                }  with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: expected blank line before Parameters
@@ -94,7 +100,7 @@ class ModuleItemSpec: QuickSpec {
                     TextDocument()
                 }
                 
-                itFailsParsing("missing returns", with: parser) {
+                itFailsParsing("missing returns") {
                     TextDocument {
                     """
                     --- foo.bar(a)
@@ -105,6 +111,8 @@ class ModuleItemSpec: QuickSpec {
                     ---  * a - The first parameter.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: expected blank line before Returns
@@ -114,7 +122,7 @@ class ModuleItemSpec: QuickSpec {
                 }
                 
                 
-                itFailsParsing("with extra blank line", with: parser) {
+                itFailsParsing("with extra blank line") {
                     TextDocument {
                     """
                     --- foo.bar(a)
@@ -126,6 +134,8 @@ class ModuleItemSpec: QuickSpec {
                     ---  * a - The first parameter.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -147,7 +157,7 @@ class ModuleItemSpec: QuickSpec {
             context("variable") {
                 let parser = ModuleItem.variableParser
                 
-                itParses("simple", with: parser) {
+                itParses("simple") {
                     TextDocument {
                     """
                     /// foo.bar
@@ -155,6 +165,8 @@ class ModuleItemSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.variable(
                         signature: .init(module: .init("foo"), name: "bar", type: nil),
@@ -162,7 +174,7 @@ class ModuleItemSpec: QuickSpec {
                     )
                 }
                 
-                itParses("full", with: parser) {
+                itParses("full") {
                     TextDocument {
                     """
                     --- foo.bar <table: number>
@@ -175,6 +187,8 @@ class ModuleItemSpec: QuickSpec {
                     foo.bar = {}
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.variable(
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
@@ -190,7 +204,7 @@ class ModuleItemSpec: QuickSpec {
                     }
                 }
                 
-                itFailsParsing("function signature", with: parser) {
+                itFailsParsing("function signature") {
                     TextDocument {
                     """
                     /// foo.bar()
@@ -198,6 +212,8 @@ class ModuleItemSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -207,15 +223,17 @@ class ModuleItemSpec: QuickSpec {
                     """
                 }
                 
-                itFailsParsing("missing Variable", with: parser) {
+                itFailsParsing("missing Variable") {
                     TextDocument {
                     """
                     /// foo.bar
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
-                    #warning("strange error due to not having access to `Parsing.ParsingError`")
+                    #warning("low-detail error due to not having access to `Parsing.ParsingError`")
                     return "error: expected Variable or Deprecated"
                 } leaving: {
                     TextDocument(firstLine: 2) {
@@ -229,7 +247,7 @@ class ModuleItemSpec: QuickSpec {
             context("method") {
                 let parser = ModuleItem.methodParser
                 
-                itParses("simple method", with: parser) {
+                itParses("simple method") {
                     TextDocument {
                     """
                     /// foo:bar()
@@ -243,6 +261,8 @@ class ModuleItemSpec: QuickSpec {
                     ///  * Nothing
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.method(
                         signature: .init(module: .init("foo"), name: "bar"),
@@ -252,7 +272,7 @@ class ModuleItemSpec: QuickSpec {
                     )
                 }
                 
-                itParses("full method", with: parser) {
+                itParses("full method") {
                     TextDocument {
                     """
                     --- foo.boo:bar(a, [b]) -> number, boolean
@@ -273,6 +293,8 @@ class ModuleItemSpec: QuickSpec {
                     ---  * another note.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.method(
                         signature: .init(
@@ -300,7 +322,7 @@ class ModuleItemSpec: QuickSpec {
             context("field") {
                 let parser = ModuleItem.fieldParser
                 
-                itParses("simple", with: parser) {
+                itParses("simple") {
                     TextDocument {
                     """
                     /// foo.bar
@@ -308,6 +330,8 @@ class ModuleItemSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.field(
                         signature: .init(module: .init("foo"), name: "bar", type: nil),
@@ -315,7 +339,7 @@ class ModuleItemSpec: QuickSpec {
                     )
                 }
                 
-                itParses("full", with: parser) {
+                itParses("full") {
                     TextDocument {
                     """
                     --- foo.bar <table: number>
@@ -328,6 +352,8 @@ class ModuleItemSpec: QuickSpec {
                     foo.bar = {}
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     ModuleItem.field(
                         signature: .init(module: .init("foo"), name: "bar", type: "<table: number>"),
@@ -343,7 +369,7 @@ class ModuleItemSpec: QuickSpec {
                     }
                 }
                 
-                itFailsParsing("function signature", with: parser) {
+                itFailsParsing("function signature") {
                     TextDocument {
                     """
                     /// foo.bar()
@@ -351,6 +377,8 @@ class ModuleItemSpec: QuickSpec {
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -360,15 +388,17 @@ class ModuleItemSpec: QuickSpec {
                     """
                 }
                 
-                itFailsParsing("missing Field", with: parser) {
+                itFailsParsing("missing Field") {
                     TextDocument {
                     """
                     /// foo.bar
                     /// Description.
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
-                    #warning("strange error message due to not having access to `Parsing.ParsingError`")
+                    #warning("low-detail error message due to not having access to `Parsing.ParsingError`")
                     return "error: expected Field or Deprecated"
                 } leaving: {
                     TextDocument(firstLine: 2) {

@@ -6,4 +6,5 @@ extension ModuleDetailsDoc {
         ParagraphDoc.parser
     }
     .map(Self.init)
+    .eraseToAnyParser()
 }

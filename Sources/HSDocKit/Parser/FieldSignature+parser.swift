@@ -12,4 +12,5 @@ extension FieldSignature {
         }
         End()
     }
+    .eraseToAnyParser()
 }

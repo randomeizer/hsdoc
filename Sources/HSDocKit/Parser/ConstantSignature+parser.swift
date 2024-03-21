@@ -15,4 +15,5 @@ extension VariableSignature {
         Skip { optionalSpaces }
         End()
     }
+    .eraseToAnyParser()
 }

@@ -2,7 +2,9 @@ import Parsing
 
 /// Parses a `Void` result if the next input matches the provided `Upstream` ``Parser``,
 /// otherwise returns `nil`, in both cases leaving the input unchanged.
-public struct Check<Upstream>: Parser where Upstream: Parser {
+public struct Check<Input, Output, Upstream: Parser>: Parser
+where Input == Upstream.Input, Output == Upstream.Output
+{
     /// The upstream ``Parser`` to check.
     public let upstream: Upstream
     
@@ -12,7 +14,7 @@ public struct Check<Upstream>: Parser where Upstream: Parser {
     ///
     /// Parameter build: The `Upstream` ``Parser``-returning closure.
     @inlinable
-    public init(@ParserBuilder _ build: () -> Upstream, orThrow fail: @escaping (Error, inout Upstream.Input) -> Error = { (error, _) in error }) {
+    public init(@ParserBuilder<Upstream.Input> _ build: () -> Upstream, orThrow fail: @escaping (Error, inout Upstream.Input) -> Error = { (error, _) in error }) {
         self.upstream = build()
         self.fail = fail
     }
@@ -30,14 +32,14 @@ public struct Check<Upstream>: Parser where Upstream: Parser {
 
 extension Check {
     @inlinable
-    public init(@ParserBuilder _ build: () -> Upstream, orThrow fail: @escaping () -> Error) {
+    public init(@ParserBuilder<Upstream.Input> _ build: () -> Upstream, orThrow fail: @escaping () -> Error) {
         self.init(build) { _, _ in
             fail()
         }
     }
 
     @inlinable
-    public init(@ParserBuilder _ build: () -> Upstream, orThrow fail: @escaping (inout Upstream.Input) -> Error) {
+    public init(@ParserBuilder<Upstream.Input> _ build: () -> Upstream, orThrow fail: @escaping (inout Upstream.Input) -> Error) {
         self.init(build) { _, input in
             fail(&input)
         }

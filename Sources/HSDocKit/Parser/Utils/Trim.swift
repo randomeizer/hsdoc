@@ -9,14 +9,18 @@ extension CharacterSet {
 }
 
 /// Trims the `Substring` contents
-public struct Trim<Upstream>: Parser
-where Upstream: Parser, Upstream.Input == Substring, Upstream.Output == Substring
+public struct Trim<Upstream: Parser>: Parser
+where Upstream.Input == Substring,
+      Upstream.Output == Substring
 {
+    public typealias Input = Substring
+    public typealias Output = Substring
+    
     public let characterSet: CharacterSet
     public let upstream: Upstream
     
     @inlinable
-    public init(charactersIn characterSet: CharacterSet = CharacterSet.whitespaces, @ParserBuilder upstream: () -> Upstream) {
+    public init(charactersIn characterSet: CharacterSet = CharacterSet.whitespaces, @ParserBuilder<Upstream.Input> upstream: () -> Upstream) {
         self.characterSet = characterSet
         self.upstream = upstream()
     }

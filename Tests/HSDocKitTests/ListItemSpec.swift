@@ -3,28 +3,32 @@ import Nimble
 @testable import HSDocKit
 
 class ListItemSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("BulletItem") {
             context("parser") {
                 let parser = BulletItem.parser
                 
-                itParses("simple list item", with: parser) {
+                itParses("simple list item") {
                     TextDocument {
                     """
                     ---  * a list item.
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem("a list item."[...])
                 }
                 
-                itParses("multi-line list item", with: parser) {
+                itParses("multi-line list item") {
                     TextDocument {
                     """
                     ---  * a list item
                     ---    with multiple lines
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem(
                         "a list item",
@@ -32,13 +36,15 @@ class ListItemSpec: QuickSpec {
                     )
                 }
                 
-                itParses("sub-items", with: parser) {
+                itParses("sub-items") {
                     TextDocument {
                     """
                     ---  * a list item
                     ---    * a sub-item
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem(
                         lines: .init("a list item"),
@@ -47,7 +53,7 @@ class ListItemSpec: QuickSpec {
                         ))
                 }
                 
-                itParses("sub-sub-items", with: parser) {
+                itParses("sub-sub-items") {
                     TextDocument {
                     """
                     ---  * a list item
@@ -57,6 +63,8 @@ class ListItemSpec: QuickSpec {
                     ---  * another item
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem(
                         lines: .init("a list item"),
@@ -76,22 +84,26 @@ class ListItemSpec: QuickSpec {
                     }
                 }
                 
-                itParses("no spaces", with: parser) {
+                itParses("no spaces") {
                     TextDocument {
                     """
                     --- * a list item
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem("a list item")
                 }
                 
-                itFailsParsing("excess indenting", with: parser) {
+                itFailsParsing("excess indenting") {
                     TextDocument {
                     """
                     ---   * a list item
                     """
                     }
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -101,13 +113,15 @@ class ListItemSpec: QuickSpec {
                     """
                 }
                 
-                itParses("insufficient indent for second line", with: parser) {
+                itParses("insufficient indent for second line") {
                     TextDocument {
                     """
                     ---  * a list item
                     ---  second line
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     BulletItem("a list item")
                 } leaving: {

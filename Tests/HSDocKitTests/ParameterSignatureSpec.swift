@@ -3,25 +3,31 @@ import Nimble
 @testable import HSDocKit
 
 class ParameterSignatureSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("ParameterSignature") {
             context("parser") {
                 let parser = ParameterSignature.parser
                 
-                itParses("required", with: parser) {
-                    "foo"
+                itParses("required") {
+                    "foo"[...]
+                } with: {
+                    parser
                 } to: {
-                    .init(name: "foo", isOptional: false)
+                    ParameterSignature(name: "foo", isOptional: false)
                 }
                 
-                itParses("optional", with: parser) {
-                    "[foo]"
+                itParses("optional") {
+                    "[foo]"[...]
+                } with: {
+                    parser
                 } to: {
-                    .init(name: "foo", isOptional: true)
+                    ParameterSignature(name: "foo", isOptional: true)
                 }
                 
-                itFailsParsing("unclosed optional", with: parser) {
-                    "[foo"
+                itFailsParsing("unclosed optional") {
+                    "[foo"[...]
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: multiple failures occurred
@@ -38,22 +44,28 @@ class ParameterSignatureSpec: QuickSpec {
                     """
                 }
                 
-                itParses("unopened optional", with: parser) {
+                itParses("unopened optional") {
                     "foo]"
+                } with: {
+                    parser
                 } to: {
                     .init(name: "foo", isOptional: false)
                 } leaving: {
                     "]"
                 }
                 
-                itParses("full", with: parser) {
+                itParses("full") {
                     "_foo123"
+                } with: {
+                    parser
                 } to: {
                     .init(name: "_foo123", isOptional: false)
                 }
                 
-                itFailsParsing("number", with: parser) {
+                itFailsParsing("number") {
                     "123_foo"
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: multiple failures occurred
@@ -78,34 +90,52 @@ class ParameterSignatureSpec: QuickSpec {
                 context("list") {
                     let parser = ParameterSignature.listParser
                     
-                    itParses("empty", with: parser, from: "()", to: [], leaving: "")
+                    itParses("empty") {
+                        "()"
+                    } with: {
+                        parser
+                    } to: {
+                        []
+                    } leaving: {
+                        ""
+                    }
                     
-                    itParses("one", with: parser) {
+                    itParses("one") {
                         "(foo)"
+                    } with: {
+                        parser
                     } to: {
                         [.init(name: "foo")]
                     }
                     
-                    itParses("two", with: parser) {
+                    itParses("two") {
                         "(foo, bar)"
+                    } with: {
+                        parser
                     } to: {
                         [.init(name: "foo"), .init(name: "bar")]
                     }
                     
-                    itParses("optional", with: parser) {
+                    itParses("optional") {
                         "([foo])"
+                    } with: {
+                        parser
                     } to: {
                         [.init(name: "foo", isOptional: true)]
                     }
                     
-                    itParses("mixed", with: parser) {
+                    itParses("mixed") {
                         "(foo, [bar])"
+                    } with: {
+                        parser
                     } to: {
                         [.init(name: "foo"), .init(name: "bar", isOptional: true)]
                     }
                     
-                    itFailsParsing("extra comma", with: parser) {
+                    itFailsParsing("extra comma") {
                         "(foo,)"
+                    } with: {
+                        parser
                     } withErrorMessage: {
                         return """
                         error: multiple failures occurred

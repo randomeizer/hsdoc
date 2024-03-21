@@ -2,13 +2,15 @@ import Parsing
 
 extension Parser {
     @inlinable
-    public func verify(_ check: @escaping (Output) throws -> Void) -> Parsers.Verify<Self> {
+    public func verify(_ check: @escaping (Output) throws -> Void) -> Parsers.Verify<Input, Output, Self> {
         .init(self, check: check)
     }
 }
 
 extension Parsers {
-    public struct Verify<Upstream: Parser>: Parser {
+    public struct Verify<Input, Output, Upstream: Parser>: Parser
+    where Input == Upstream.Input, Output == Upstream.Output
+    {
         public let upstream: Upstream
         
         public let check: (Upstream.Output) throws -> Void
@@ -18,7 +20,7 @@ extension Parsers {
             self.check = check
         }
         
-        public init(@ParserBuilder _ builder: () -> Upstream, check: @escaping (Upstream.Output) throws -> Void) {
+        public init(@ParserBuilder<Upstream.Input> _ builder: () -> Upstream, check: @escaping (Upstream.Output) throws -> Void) {
             self.upstream = builder()
             self.check = check
         }

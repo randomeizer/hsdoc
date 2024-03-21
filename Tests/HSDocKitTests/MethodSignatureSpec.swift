@@ -3,13 +3,15 @@ import Nimble
 @testable import HSDocKit
 
 class MethodSignatureSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("MethodSignature") {
             context("parser") {
                 let parser = MethodSignature.parser
                 
-                itParses("function with params and returns", with: parser) {
+                itParses("function with params and returns") {
                     "foo:bar(a, b) -> table, number"
+                } with: {
+                    parser
                 } to: {
                     .init(
                         module: .init("foo"), name: "bar",
@@ -18,8 +20,10 @@ class MethodSignatureSpec: QuickSpec {
                     )
                 }
                 
-                itParses("function with optional param", with: parser) {
+                itParses("function with optional param") {
                     "foo:bar([a])"
+                } with: {
+                    parser
                 } to: {
                     .init(
                         module: .init("foo"), name: "bar",

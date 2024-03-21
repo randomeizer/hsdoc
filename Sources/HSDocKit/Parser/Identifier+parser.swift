@@ -11,14 +11,20 @@ func isIdentifier(_ char: Character) -> Bool {
     char.isLetter || char.isNumber || char == "_"
 }
 
+func isIdentifierLeadCharacter(_ char: Character) -> Bool {
+    char.isLetter || char == "_"
+}
+
+
 extension Identifier {
     /// Parses a `Substring` to an `Identifier`
-    static let parser = Parse(Identifier.init(_:)) {
+    static let parser: AnyParser<Substring, Identifier> = Parse(Identifier.init(_:)) {
         Check {
-            Prefix(1) { $0.isLetter || $0 == "_" }
-        } orThrow: { (_, _) in
+            Prefix(1, while: isIdentifierLeadCharacter(_:))
+        } orThrow: { _, _ in
             LintError.expected("letter or underscore")
         }
         Prefix(while: isIdentifier(_:))
     }
+    .eraseToAnyParser()
 }

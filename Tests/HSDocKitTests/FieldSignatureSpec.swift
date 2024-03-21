@@ -3,25 +3,31 @@ import Nimble
 @testable import HSDocKit
 
 class FieldSignatureSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("FieldSignature") {
             context("parser") {
                 let parser = FieldSignature.parser
                 
-                itParses("simple", with: parser) {
-                    "foo.bar"
+                itParses("simple") {
+                    "foo.bar"[...]
+                } with: {
+                    parser
                 } to: {
-                    .init(module: .init("foo"), name: "bar", type: nil)
+                    FieldSignature(module: .init("foo"), name: "bar", type: nil)
                 }
                 
-                itParses("typed", with: parser) {
-                    "foo.bar <table>"
+                itParses("typed") {
+                    "foo.bar <table>"[...]
+                } with: {
+                    parser
                 } to: {
-                    .init(module: .init("foo"), name: "bar", type: "<table>")
+                    FieldSignature(module: .init("foo"), name: "bar", type: "<table>")
                 }
                 
-                itFailsParsing("function", with: parser) {
-                    "foo.bar()"
+                itFailsParsing("function") {
+                    "foo.bar()"[...]
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -30,11 +36,13 @@ class FieldSignatureSpec: QuickSpec {
                       |        ^ expected end of input
                     """
                 } leaving: {
-                    "()"
+                    "()"[...]
                 }
                 
-                itFailsParsing("method", with: parser) {
-                    "foo:bar()"
+                itFailsParsing("method") {
+                    "foo:bar()"[...]
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input

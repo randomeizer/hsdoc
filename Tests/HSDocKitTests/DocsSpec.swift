@@ -12,12 +12,12 @@ import Parsing
 @testable import HSDocKit
 
 class DocsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Docs") {
             context("parser") {
                 let parser = Docs.parser
                 
-                itParses("single function", with: parser) {
+                itParses("single function") {
                     TextDocument {
                         """
                         skip this
@@ -32,6 +32,8 @@ class DocsSpec: QuickSpec {
                         ---  * Nothing
                         """
                     }
+                } with: {
+                    parser
                 } to: {
                     [.init(
                         lineNumber: 2,
@@ -47,7 +49,7 @@ class DocsSpec: QuickSpec {
                     )]
                 }
                 
-                itParses("single variable", with: parser) {
+                itParses("single variable") {
                     TextDocument {
                         """
                         skip this
@@ -56,6 +58,8 @@ class DocsSpec: QuickSpec {
                         --- Description.
                         """
                     }
+                } with: {
+                    parser
                 } to: {
                     [.init(
                         lineNumber: 2,
@@ -68,17 +72,17 @@ class DocsSpec: QuickSpec {
                     )]
                 }
                 
-                itParses("module and function", with: parser) {
+                itParses("module and function") {
                     TextDocument {
                         """
                         --- === my.module ===
                         ---
                         --- Module details.
-
+                        
                         local foo = require("foo")
-
+                        
                         local mod = {}
-
+                        
                         --- my.module.funcWithReturn(a, b) -> boolean
                         --- Function
                         --- Function details.
@@ -92,6 +96,8 @@ class DocsSpec: QuickSpec {
                         other code here
                         """
                     }
+                } with: {
+                    parser
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
@@ -115,7 +121,7 @@ class DocsSpec: QuickSpec {
                     }
                 }
                 
-                itParses("clean valid docs", with: parser) {
+                itParses("clean valid docs") {
                     TextDocument {
                     """
                     --- === my.module ===
@@ -123,11 +129,11 @@ class DocsSpec: QuickSpec {
                     --- Module description.
                     ---
                     --- A second line of description.
-
+                    
                     local foo = require("foo")
-
+                    
                     local mod = {}
-
+                    
                     --- my.module.funcWithReturn(a, b) -> boolean
                     --- Function
                     --- Function description.
@@ -141,7 +147,7 @@ class DocsSpec: QuickSpec {
                     function mod.func(a, b)
                         return true
                     end
-
+                    
                     --- my.module.var
                     --- Variable
                     --- Variable description.
@@ -159,7 +165,7 @@ class DocsSpec: QuickSpec {
                     ---  * Nothing.
                     function mod:method(a, b)
                     end
-
+                    
                     --- my.module:methodWithReturn(a) -> string
                     --- Method
                     --- Method description.
@@ -181,6 +187,8 @@ class DocsSpec: QuickSpec {
                     end
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     [
                         .init(lineNumber: 1, doc: .module(
@@ -235,7 +243,7 @@ class DocsSpec: QuickSpec {
                     }
                 }
                 
-                itParses("global functions and vars", with: parser) {
+                itParses("global functions and vars") {
                     TextDocument {
                     """
                     local randomCodeHere = true
@@ -259,6 +267,8 @@ class DocsSpec: QuickSpec {
                     globalVar = "Hello, world!"
                     """
                     }
+                } with: {
+                    parser
                 } to: {
                     [
                         .init(lineNumber: 3, doc: .item(.function(

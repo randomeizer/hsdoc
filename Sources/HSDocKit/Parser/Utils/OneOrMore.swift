@@ -3,10 +3,8 @@ import Parsing
 import NonEmpty
 
 /// Requires at least one match for the `Upstream` ``Parser``. If found, a ``NonEmpty`` array of the results is the `Output`.
-struct OneOrMore<Upstream, Separator, Terminator>: Parser
-where Upstream: Parser,
-      Separator: Parser,
-      Terminator: Parser,
+struct OneOrMore<Input, Output, Upstream: Parser, Separator: Parser, Terminator: Parser>: Parser
+where Input == Upstream.Input, Output == Upstream.Output,
       Upstream.Input == Separator.Input,
       Terminator.Input == Upstream.Input
 {
@@ -15,9 +13,9 @@ where Upstream: Parser,
     let terminator: Terminator
 
     init(
-        @ParserBuilder _ build: () -> Upstream,
-        @ParserBuilder separator: () -> Separator,
-        @ParserBuilder terminator: () -> Terminator
+        @ParserBuilder<Upstream.Input> _ build: () -> Upstream,
+        @ParserBuilder<Separator.Input> separator: () -> Separator,
+        @ParserBuilder<Terminator.Input> terminator: () -> Terminator
     ) {
         self.upstream = build()
         self.separator = separator()
@@ -95,7 +93,7 @@ where Upstream: Parser,
 
 extension OneOrMore where Separator == Always<Input, Void>, Terminator == Always<Input, Void> {
     @inlinable
-    init(@ParserBuilder _ builder: () -> Upstream) {
+    init(@ParserBuilder<Upstream.Input> _ builder: () -> Upstream) {
         self.upstream = builder()
         self.separator = .init(())
         self.terminator = .init(())
@@ -104,7 +102,7 @@ extension OneOrMore where Separator == Always<Input, Void>, Terminator == Always
 
 extension OneOrMore where Separator == Always<Input, Void> {
     @inlinable
-    init(@ParserBuilder _ builder: () -> Upstream, terminator: () -> Terminator) {
+    init(@ParserBuilder<Terminator.Input> _ builder: () -> Upstream, terminator: () -> Terminator) {
         self.upstream = builder()
         self.separator = .init(())
         self.terminator = terminator()
@@ -113,7 +111,7 @@ extension OneOrMore where Separator == Always<Input, Void> {
 
 extension OneOrMore where Terminator == Always<Input, Void> {
     @inlinable
-    init(@ParserBuilder _ builder: () -> Upstream, separator: () -> Separator) {
+    init(@ParserBuilder<Separator.Input> _ builder: () -> Upstream, separator: () -> Separator) {
         self.upstream = builder()
         self.separator = separator()
         self.terminator = .init(())

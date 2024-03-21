@@ -10,6 +10,30 @@
             ],
             "cwd": "${workspaceFolder:hsdoc}",
             "preLaunchTask": "swift: Build All"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:hsdoc}",
+            "name": "Debug hsdoc",
+            "program": "${workspaceFolder:hsdoc}/.build/debug/hsdoc",
+            "preLaunchTask": "swift: Build Debug hsdoc"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "sourceLanguages": [
+                "swift"
+            ],
+            "args": [],
+            "cwd": "${workspaceFolder:hsdoc}",
+            "name": "Release hsdoc",
+            "program": "${workspaceFolder:hsdoc}/.build/release/hsdoc",
+            "preLaunchTask": "swift: Build Release hsdoc"
         }
     ]
 }

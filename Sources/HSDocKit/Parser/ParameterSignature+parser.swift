@@ -8,11 +8,11 @@ extension ParameterSignature {
             "["
             Identifier.parser
             "]"
-        }.map { ParameterSignature(name: $0, isOptional: true)}
+        }.map { ParameterSignature(name: $0, isOptional: true) }
         Identifier.parser
             .map { ParameterSignature(name: $0, isOptional: false) }
     }
-    
+
     /// A parser that converts a `Substring` with a bracketted `"(list)"` of parameter names.
     static let listParser = Parse {
         "("
@@ -26,4 +26,5 @@ extension ParameterSignature {
             ")"
         }
     }
+    .eraseToAnyParser()
 }

@@ -15,6 +15,7 @@ extension ModuleSignature {
         "."
     }
     .map(ModuleSignature.init)
+    .eraseToAnyParser()
     
     /// Parses a ``ModuleSignature`` when it is not a prefix for another value (eg. `"my.module"` as opposed to `"my.module:method(...)"`.
     static let nameParser = OneOrMore {
@@ -23,4 +24,5 @@ extension ModuleSignature {
         "."
     }
     .map(ModuleSignature.init)
+    .eraseToAnyParser()
 }

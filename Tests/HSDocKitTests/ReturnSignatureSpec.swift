@@ -1,53 +1,77 @@
-import Quick
-import Nimble
 @testable import HSDocKit
+import Nimble
+import Quick
 
 class ReturnSignatureSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("ReturnSignature") {
             context("parser") {
                 let parser = ReturnSignature.parser
-                
-                itParses("something", with: parser, from: "foo", to: .init("foo"))
-                
-                itFailsParsing("nothing", with: parser) {
+
+                itParses("something") {
+                    "foo"
+                } with: {
+                    parser
+                } to: {
+                    .init("foo")
+                }
+
+                itFailsParsing("nothing") {
                     ""
+                } with: {
+                    parser
                 } withErrorMessage: {
                     "expected a return type"
                 }
-                
-                itFailsParsing("blank line", with: parser) {
+
+                itFailsParsing("blank line") {
                     "\n"
+                } with: {
+                    parser
                 } withErrorMessage: {
                     "expected a return type"
                 }
             }
-            
+
             context("listParser") {
                 let parser = ReturnSignature.listParser
-                
-                itParses("nothing", with: parser, from: "", to: [])
-                
-                itParses("one", with: parser) {
+
+                itParses("nothing") {
+                    ""
+                } with: {
+                    parser
+                } to: {
+                    []
+                }
+
+                itParses("one") {
                     "foo"
+                } with: {
+                    parser
                 } to: {
                     [ReturnSignature("foo")]
                 }
-                
-                itParses("two", with: parser) {
+
+                itParses("two") {
                     "foo, bar"
+                } with: {
+                    parser
                 } to: {
                     ["foo", "bar"]
                 }
-                
-                itParses("alternate", with: parser) {
+
+                itParses("alternate") {
                     "foo, bar | nil"
+                } with: {
+                    parser
                 } to: {
                     ["foo", "bar | nil"]
                 }
-                
-                itParses("trimming whitespace", with: parser) {
+
+                itParses("trimming whitespace") {
                     " foo , bar \t"
+                } with: {
+                    parser
                 } to: {
                     ["foo", "bar"]
                 }

@@ -4,60 +4,78 @@ import Parsing
 import HSDocKit
 
 class TrimSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Trim") {
-            let parser = Trim { Rest() }
+            let parser = Trim { Prefix(0...) }
             
-            itParses("empty string", with: parser) {
+            itParses("empty string") {
                 ""
+            } with: {
+                parser
             } to: {
                 ""
             }
             
-            itParses("spaces", with: parser) {
+            itParses("spaces") {
                 "     "
+            } with: {
+                parser
             } to: {
                 ""
             }
             
-            itParses("no spaces", with: parser) {
+            itParses("no spaces") {
                 "foobar"
+            } with: {
+                parser
             } to: {
                 "foobar"
             }
             
-            itParses("left padded", with: parser) {
+            itParses("left padded") {
                 "   foobar"
+            } with: {
+                parser
             } to: {
                 "foobar"
             }
             
-            itParses("right padded", with: parser) {
+            itParses("right padded") {
                 "foobar   "
+            } with: {
+                parser
             } to: {
                 "foobar"
             }
             
-            itParses("padded", with: parser) {
+            itParses("padded") {
                 "   foobar    "
+            } with: {
+                parser
             } to: {
                 "foobar"
             }
             
-            itParses("multiple words", with: parser) {
+            itParses("multiple words") {
                 "   foo bar     "
+            } with: {
+                parser
             } to: {
                 "foo bar"
             }
             
-            itParses("tabs", with: parser) {
+            itParses("tabs") {
                 "\tfoobar\t"
+            } with: {
+                parser
             } to: {
                 "foobar"
             }
             
-            itParses("digit trimming", with: Trim(charactersIn: .decimalDigits) { Rest() }) {
+            itParses("digit trimming") {
                 "123foobar456"
+            } with: {
+                Trim(charactersIn: .decimalDigits) { Rest() }
             } to: {
                 "foobar"
             }

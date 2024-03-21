@@ -3,7 +3,7 @@ import Nimble
 @testable import HSDocKit
 
 class ParserElementsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("elements") {
             context("docPrefix") {
                 given (
@@ -14,7 +14,7 @@ class ParserElementsSpec: QuickSpec {
                     ("two dashes",          "--",   false,  "--",   #line),
                     ("four dashes",         "----", false,  "----", #line),
                     ("two slashes",         "//",   false,  "//",   #line),
-                    ("four slashes",        "////", false,  "/",    #line),
+                    ("four slashes",        "////", false,  "",     #line),
                     ("slash dash",          "///-", true,   "-",    #line),
                     ("dash slash",          "---/", true,   "/",    #line)
                 ) { (label, input, parses, remainder, line: UInt) in
@@ -23,7 +23,7 @@ class ParserElementsSpec: QuickSpec {
                         var inputSub = input[...]
                         
                         expect{ try docPrefix.parse(&inputSub) }.to(throwError(if: !parses))
-                        expect(line: line, inputSub).to(equal(remainder[...]))
+                        expect(line: line, inputSub).to(haveNoDifference(to: remainder[...]))
                     }
                 }
             }

@@ -3,31 +3,39 @@ import Nimble
 @testable import HSDocKit
 
 class IdentifierSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Identifier") {
             context("parser") {
                 let parser = Identifier.parser
                 
-                itParses("alphas", with: parser) {
-                    "foo"
+                itParses("alphas") {
+                    "foo"[...]
+                } with: {
+                    parser
                 } to: {
                     .init("foo")
                 }
                 
-                itParses("underscore", with: parser) {
+                itParses("underscore") {
                     "_foo"
+                } with: {
+                    parser
                 } to: {
                     .init("_foo")
                 }
                 
-                itParses("alphanumeric", with: parser) {
+                itParses("alphanumeric") {
                     "abc123"
+                } with: {
+                    parser
                 } to: {
                     .init("abc123")
                 }
                 
-                itFailsParsing("numericalpha", with: parser) {
+                itFailsParsing("numericalpha") {
                     "123abc"
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: expected letter or underscore

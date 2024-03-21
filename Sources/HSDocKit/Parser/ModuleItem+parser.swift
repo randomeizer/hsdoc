@@ -1,7 +1,6 @@
 import Parsing
 
 extension ModuleItem {
-    
     static let parser = OneOf {
         constantParser
         constructorParser
@@ -10,7 +9,8 @@ extension ModuleItem {
         methodParser
         variableParser
     }
-    
+    .eraseToAnyParser()
+
     static let constantParser = Parse(Self.constant) {
         DocLine(ConstantSignature.parser)
         DocLine(deprecable("Constant"))
@@ -19,7 +19,8 @@ extension ModuleItem {
             NotesDoc.parser
         }
     }
-    
+    .eraseToAnyParser()
+
     static let constructorParser = Parse(Self.constructor) {
         DocLine(ConstructorSignature.parser)
         DocLine(deprecable("Constructor"))
@@ -35,12 +36,12 @@ extension ModuleItem {
            case let sigCount = signature.parameters.count,
            case let paramCount = parameters.items.count,
            sigCount == 0 && paramCount != 1,
-           sigCount != paramCount
-        {
+           sigCount != paramCount {
             throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
         }
     }
-    
+    .eraseToAnyParser()
+
     static let fieldParser = Parse(Self.field) {
         DocLine(FieldSignature.parser)
         DocLine(deprecable("Field"))
@@ -49,7 +50,8 @@ extension ModuleItem {
             NotesDoc.parser
         }
     }
-    
+    .eraseToAnyParser()
+
     static let functionParser = Parse(Self.function) {
         DocLine(FunctionSignature.parser)
         DocLine(deprecable("Function"))
@@ -65,11 +67,11 @@ extension ModuleItem {
            case let sigCount = signature.parameters.count,
            case let paramCount = parameters.items.count,
            sigCount == 0 && paramCount != 1,
-           sigCount != paramCount
-        {
+           sigCount != paramCount {
             throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
         }
     }
+    .eraseToAnyParser()
 
     static let methodParser = Parse(Self.method) {
         DocLine(MethodSignature.parser)
@@ -86,12 +88,12 @@ extension ModuleItem {
            case let sigCount = signature.parameters.count,
            case let paramCount = parameters.items.count,
            sigCount == 0 && paramCount != 1,
-           sigCount != paramCount
-        {
+           sigCount != paramCount {
             throw LintError.expected("signature parameter count of \(sigCount) to equal the Parameters count of \(paramCount)")
         }
     }
-    
+    .eraseToAnyParser()
+
     static let variableParser = Parse(Self.variable) {
         DocLine(VariableSignature.parser)
         DocLine(deprecable("Variable"))
@@ -100,5 +102,5 @@ extension ModuleItem {
             NotesDoc.parser
         }
     }
-
+    .eraseToAnyParser()
 }

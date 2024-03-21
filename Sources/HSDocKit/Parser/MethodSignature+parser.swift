@@ -17,4 +17,5 @@ extension MethodSignature {
         }
         End()
     }
+    .eraseToAnyParser()
 }

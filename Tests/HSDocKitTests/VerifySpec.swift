@@ -4,28 +4,26 @@ import Parsing
 import HSDocKit
 
 class VerifySpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Verify") {
-            itParses(
-                "nothing thrown",
-                with: Rest().verify { _ in }
-            ) {
-                "Hello"
+            itParses("when nothing is thrown") {
+                "Hello"[...]
+            } with: {
+                Rest().verify { _ in }
             } to: {
-                "Hello"
+                "Hello"[...]
             }
             
-            itFailsParsing(
-                "thrown",
-                with: Rest().verify { _ in
+            itFailsParsing("when an error is thrown") {
+                "Hello"[...]
+            } with: {
+                Rest().verify { _ in
                     throw LintError.expected("something else")
                 }
-            ) {
-                "Hello"
             } withErrorMessage: {
                 "expected something else"
             } leaving: {
-                ""
+                ""[...]
             }
         }
     }

@@ -3,32 +3,40 @@ import Nimble
 @testable import HSDocKit
 
 class VariableSignatureSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("VariableSignature") {
             context("parser") {
                 let parser = VariableSignature.parser
                 
-                itParses("simple", with: parser) {
-                    "foo.bar"
+                itParses("simple") {
+                    "foo.bar"[...]
+                } with: {
+                    parser
                 } to: {
-                    .init(module: .init("foo"), name: "bar", type: nil)
+                    VariableSignature(module: .init("foo"), name: "bar", type: nil)
                 }
                 
-                itParses("typed", with: parser) {
+                itParses("typed") {
                     "foo.bar <table>"
+                } with: {
+                    parser
                 } to: {
                     .init(module: .init("foo"), name: "bar", type: "<table>")
                 }
                 
-                itParses("trailing space", with: parser) {
+                itParses("trailing space") {
                     "foo.bar "
+                } with: {
+                    parser
                 } to: {
                     .init(module: .init("foo"), name: "bar", type: nil)
                 }
 
                 
-                itFailsParsing("function", with: parser) {
+                itFailsParsing("function") {
                     "foo.bar()"
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
                     error: unexpected input
@@ -40,14 +48,16 @@ class VariableSignatureSpec: QuickSpec {
                     "()"
                 }
                 
-                itFailsParsing("method", with: parser) {
+                itFailsParsing("method") {
                     "foo:bar()"
+                } with: {
+                    parser
                 } withErrorMessage: {
                     """
-                    error: expected letter or underscore
+                    error: unexpected input
                      --> input:1:4
                     1 | foo:bar()
-                      |    ^
+                      |    ^ expected end of input
                     """
                 } leaving: {
                     ":bar()"
